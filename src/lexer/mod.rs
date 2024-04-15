@@ -45,7 +45,11 @@ impl<'a> Lexer<'a> {
                 }
                 '-' => {
                     self.pos += 1;
-                    return Some(Token::subtraction);
+                    return Some(Token::Subtraction);
+                }
+                '*' => {
+                    self.pos += 1;
+                    return Some(Token::Multiplication);
                 }
                 ';' => {
                     self.pos += 1;
@@ -63,7 +67,11 @@ impl<'a> Lexer<'a> {
                     let next_char = self.code.chars().nth(self.pos + 1)?;
                     let token = match next_char {
                         '/' => self.read_comment(),
-                        _ => panic!("Unexpected character")
+                        _ => {
+                            self.pos += 1;
+                            return Some(Token::Division);
+                        },
+                        _ => panic!("Expected division"),
                     };
 
                     return token;

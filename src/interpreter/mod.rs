@@ -25,6 +25,7 @@ impl Interpreter {
             match stmt {
                 Stmt::Let(name, value) => self.eval_let(name, value),
                 Stmt::Log(expr) => self.eval_log(expr),
+                Stmt::Assignment(name, value) => self.eval_let(name, value),
                 Stmt::Comment(_) => (),
             }
         }

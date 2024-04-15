@@ -16,6 +16,8 @@ fn main() {
         log(m);
         log(y - x);
         log(y * x);
+        y = 10;
+        log(y);
 
         // {
         //     let x = 5;

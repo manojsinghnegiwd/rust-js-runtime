@@ -30,6 +30,7 @@ pub enum Expr {
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
     Let(String, Expr),
+    Assignment(String, Expr),
     Log(Expr),
     Comment(String),
 }

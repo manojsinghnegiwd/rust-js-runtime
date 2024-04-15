@@ -18,11 +18,19 @@ impl Parser {
                 Token::Let => stmts.push(self.parse_let()),
                 Token::Log => stmts.push(self.parse_log()),
                 Token::Comment(comment) => stmts.push(Stmt::Comment(comment)),
+                Token::Identifier(name) => stmts.push(Stmt::Assignment(name, self.parse_assignment())),
                 _ => (),
             }
         }
 
         stmts
+    }
+
+    fn parse_assignment (&mut self) -> Expr {
+        match self.next_token() {
+            Some(Token::Equals) => self.parse_expr(),
+            _ => panic!("Expected equals after identifier"),
+        }
     }
 
     fn parse_let(&mut self) -> Stmt {
@@ -46,6 +54,8 @@ impl Parser {
             if token == Some(Token::Semicolon) || token == Some(Token::ParenClose) {
                 break;
             }
+
+            println!("{:?} here is a token", token);
 
             let current_token_expr = match token {
                 Some(Token::Float(num)) => Expr::Float(num),

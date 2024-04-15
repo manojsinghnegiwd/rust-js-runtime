@@ -10,11 +10,13 @@ use lexer::Lexer;
 fn main() {
     let code = r#"
         let x = 3;
-        let y = x + 3 + 5;
+        let y = x + 3 + 3;
         let m = 'Manoj';
         log(x + 1);
         log(m);
         log(y - x);
+        log(y * x);
+        log(11/5);
 
         // {
         //     let x = 5;

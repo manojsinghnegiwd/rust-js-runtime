@@ -57,11 +57,25 @@ impl Parser {
 
                     return Expr::Addition(Box::new(left), Box::new(right))
                 },
-                Some(Token::subtraction) => {
+                Some(Token::Subtraction) => {
                     let left = expr.pop().expect("Expected left side of subtraction");
                     let right = self.parse_expr();
 
-                    return Expr::subtraction(Box::new(left), Box::new(right))
+                    return Expr::Subtraction(Box::new(left), Box::new(right))
+                }
+                ,
+                Some(Token::Multiplication) => {
+                    let left = expr.pop().expect("Expected left side of multiplication");
+                    let right = self.parse_expr();
+
+                    return Expr::Multiplication(Box::new(left), Box::new(right))
+                }
+                ,
+                Some(Token::Division) => {
+                    let left = expr.pop().expect("Expected left side of division");
+                    let right = self.parse_expr();
+
+                    return Expr::Division(Box::new(left), Box::new(right))
                 }
                 _ => panic!("Expected number or identifier"),
             };

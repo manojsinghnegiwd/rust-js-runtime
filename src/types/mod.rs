@@ -9,6 +9,7 @@ pub enum Token {
     Log,
     ParenClose,
     ParenOpen,
+    Comment(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -22,4 +23,5 @@ pub enum Expr {
 pub enum Stmt {
     Let(String, Expr),
     Log(Expr),
+    Comment(String),
 }

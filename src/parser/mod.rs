@@ -20,6 +20,7 @@ impl Parser {
             match token {
                 Token::Let => stmts.push(self.parse_let()),
                 Token::Log => stmts.push(self.parse_log()),
+                Token::Comment(comment) => stmts.push(Stmt::Comment(comment)),
                 _ => (),
             }
         }
@@ -66,7 +67,6 @@ impl Parser {
 
     fn next_token(&mut self) -> Option<Token> {
         let token = self.tokens.get(self.pos).cloned();
-        println!("Token: {:?}", token);
         self.pos += 1;
         token
     }

@@ -57,6 +57,15 @@ impl<'a> Lexer<'a> {
                     self.pos += 1;
                     return Some(Token::ParenClose);
                 }
+                '/' =>{
+                    let next_char = self.code.chars().nth(self.pos + 1)?;
+                    let token = match next_char {
+                        '/' => self.read_comment(),
+                        _ => panic!("Unexpected character")
+                    };
+
+                    return token;
+                }
                 _ => {
                     self.pos += 1;
                 }
@@ -126,10 +135,44 @@ impl<'a> Lexer<'a> {
 
         Some(Token::StringLiteral(literal.to_string()))
     }
+
+    fn read_comment(&mut self) -> Option<Token> {
+        let start = self.pos;
+        self.pos += 1;
+
+        while self.pos < self.code.len() {
+            let c = self.code.chars().nth(self.pos)?;
+
+            if c == '\n' {
+                break;
+            }
+
+            self.pos += 1;
+        }
+
+        let comment = &self.code[start..self.pos];
+        Some(Token::Comment(comment.to_string()))
+    }
 }
 
 fn main() {
-    let code = "let x = 3; let m = 'Manoj'; log(x); log(m);";
+    let code = r#"
+        let x = 3;
+        let y = x;
+        let m = 'Manoj';
+        log(x);
+        log(m);
+        log(y);
+
+        // {
+        //     let x = 5;
+        //     log(x);
+        // }
+
+        // reactive {
+        //     log(x);
+        // }
+    "#;
     let mut lexer = Lexer::new(code);
     let mut tokens = Vec::new();
 
@@ -137,12 +180,16 @@ fn main() {
         tokens.push(token);
     }
 
-    println!("{:?}", tokens);
+    for token in &tokens {
+        println!("{:?}", token);
+    }
 
     let mut parser = Parser::new(tokens);
     let ast = parser.parse();
 
-    println!("{:?}", ast);
+    for stmt in &ast {
+        println!("{:?}", stmt);
+    }
 
     let mut interpreter = Interpreter::new();
     interpreter.eval(ast);

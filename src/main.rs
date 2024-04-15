@@ -37,6 +37,10 @@ impl<'a> Lexer<'a> {
                     let token = self.read_number();
                     return token;
                 }
+                '\'' => {
+                    let token = self.read_string_literal();
+                    return token;
+                }
                 '=' => {
                     self.pos += 1;
                     return Some(Token::Equals);
@@ -98,16 +102,42 @@ impl<'a> Lexer<'a> {
         let num = &self.code[start..self.pos];
         Some(Token::Number(num.parse().unwrap()))
     }
+
+    fn read_string_literal(&mut self) -> Option<Token> {
+        let start: usize = self.pos;
+
+        // Skip the opening quote
+        self.pos += 1;
+
+        while self.pos < self.code.len() {
+            let c = self.code.chars().nth(self.pos)?;
+
+            if c == '\'' {
+                break;
+            }
+
+            self.pos += 1;
+        }
+
+        let literal = &self.code[start + 1..self.pos];
+
+        // Skip the closing quote
+        self.pos += 1;
+
+        Some(Token::StringLiteral(literal.to_string()))
+    }
 }
 
 fn main() {
-    let code = "let x = 3; log(x);";
+    let code = "let x = 3; let m = 'Manoj'; log(x); log(m);";
     let mut lexer = Lexer::new(code);
     let mut tokens = Vec::new();
 
     while let Some(token) = lexer.next_token() {
         tokens.push(token);
     }
+
+    println!("{:?}", tokens);
 
     let mut parser = Parser::new(tokens);
     let ast = parser.parse();

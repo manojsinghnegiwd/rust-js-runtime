@@ -45,6 +45,7 @@ impl Parser {
         match self.next_token() {
             Some(Token::Number(num)) => Expr::Number(num),
             Some(Token::Identifier(name)) => Expr::Identifier(name),
+            Some(Token::StringLiteral(literal)) => Expr::StringLiteral(literal),
             _ => panic!("Expected number or identifier")
         }
     }

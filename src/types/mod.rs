@@ -4,6 +4,7 @@ pub enum Token {
     Identifier(String),
     Equals,
     Number(usize),
+    StringLiteral(String),
     Semicolon,
     Log,
     ParenClose,
@@ -14,6 +15,7 @@ pub enum Token {
 pub enum Expr {
     Identifier(String),
     Number(usize),
+    StringLiteral(String),
 }
 
 #[derive(Debug, PartialEq)]

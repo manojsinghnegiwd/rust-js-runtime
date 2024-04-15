@@ -4,6 +4,7 @@ use crate::types::{Expr, Stmt};
 #[derive(Clone, Debug)]
 enum Value {
     Number(usize),
+    StringLiteral(String),
 }
 
 pub struct Interpreter {
@@ -42,6 +43,7 @@ impl Interpreter {
         match expr {
             Expr::Identifier(name) => self.global_scope.get(&name).unwrap().clone(),
             Expr::Number(num) => Value::Number(num),
+            Expr::StringLiteral(literal) => Value::StringLiteral(literal),
         }
     }
 }

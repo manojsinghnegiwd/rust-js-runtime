@@ -45,6 +45,15 @@ impl Interpreter {
             Expr::Identifier(name) => self.global_scope.get(&name).unwrap().clone(),
             Expr::Number(num) => Value::Number(num),
             Expr::StringLiteral(literal) => Value::StringLiteral(literal),
+            Expr::Addition(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match (left, right) {
+                    (Value::Number(left), Value::Number(right)) => Value::Number(left + right),
+                    _ => panic!("Expected two numbers"),
+                }
+            },
         }
     }
 }

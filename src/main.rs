@@ -10,9 +10,9 @@ use lexer::Lexer;
 fn main() {
     let code = r#"
         let x = 3;
-        let y = x;
+        let y = x + 3 + 5;
         let m = 'Manoj';
-        log(x);
+        log(x + 1);
         log(m);
         log(y);
 
@@ -28,6 +28,8 @@ fn main() {
     let mut lexer = Lexer::new(code);
     let mut tokens = Vec::new();
 
+    println!("Lexer started... \n");
+
     while let Some(token) = lexer.next_token() {
         tokens.push(token);
     }
@@ -36,6 +38,10 @@ fn main() {
         println!("{:?}", token);
     }
 
+    println!("\nLexer completed... \n");
+
+    println!("Parsing started... \n");
+
     let mut parser = Parser::new(tokens);
     let ast = parser.parse();
 
@@ -43,6 +49,12 @@ fn main() {
         println!("{:?}", stmt);
     }
 
+    println!("\nParsing completed... \n");
+
+    println!("Execution started... \n");
+
     let mut interpreter = Interpreter::new();
     interpreter.eval(ast);
+
+    println!("\nExecution completed... \n");
 }

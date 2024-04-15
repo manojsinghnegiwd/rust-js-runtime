@@ -14,7 +14,7 @@ fn main() {
         let m = 'Manoj';
         log(x + 1);
         log(m);
-        log(y);
+        log(y - x);
 
         // {
         //     let x = 5;

@@ -54,6 +54,15 @@ impl Interpreter {
                     _ => panic!("Expected two numbers"),
                 }
             },
+            Expr::subtraction(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match (left, right) {
+                    (Value::Number(left), Value::Number(right)) => Value::Number(left - right),
+                    _ => panic!("Expected two numbers"),
+                }
+            },
         }
     }
 }

@@ -3,7 +3,7 @@ use crate::types::{Expr, Stmt};
 
 #[derive(Clone, Debug)]
 enum Value {
-    Number(usize),
+    Float(f64),
     StringLiteral(String),
 }
 
@@ -43,14 +43,14 @@ impl Interpreter {
     fn eval_expr(&mut self, expr: Expr) -> Value {
         match expr {
             Expr::Identifier(name) => self.global_scope.get(&name).unwrap().clone(),
-            Expr::Number(num) => Value::Number(num),
+            Expr::Float(num) => Value::Float(num),
             Expr::StringLiteral(literal) => Value::StringLiteral(literal),
             Expr::Addition(left, right) => {
                 let left = self.eval_expr(*left);
                 let right = self.eval_expr(*right);
 
                 match (left, right) {
-                    (Value::Number(left), Value::Number(right)) => Value::Number(left + right),
+                    (Value::Float(left), Value::Float(right)) => Value::Float(left + right),
                     _ => panic!("Expected two numbers"),
                 }
             },
@@ -59,7 +59,7 @@ impl Interpreter {
                 let right = self.eval_expr(*right);
 
                 match (left, right) {
-                    (Value::Number(left), Value::Number(right)) => Value::Number(left - right),
+                    (Value::Float(left), Value::Float(right)) => Value::Float(left - right),
                     _ => panic!("Expected two numbers"),
                 }
             },
@@ -68,7 +68,7 @@ impl Interpreter {
                 let right = self.eval_expr(*right);
 
                 match (left, right) {
-                    (Value::Number(left), Value::Number(right)) => Value::Number(left * right),
+                    (Value::Float(left), Value::Float(right)) => Value::Float(left * right),
                     _ => panic!("Expected two numbers"),
                 }
             },
@@ -77,7 +77,7 @@ impl Interpreter {
                 let right = self.eval_expr(*right);
 
                 match (left, right) {
-                    (Value::Number(left), Value::Number(right)) => Value::Number(left / right),
+                    (Value::Float(left), Value::Float(right)) => Value::Float(left / right),
                     _ => panic!("Expected two numbers"),
                 }
             },

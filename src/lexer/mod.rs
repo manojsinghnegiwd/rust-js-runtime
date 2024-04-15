@@ -28,7 +28,7 @@ impl<'a> Lexer<'a> {
                     return token;
                 }
                 '0'..='9' => {
-                    let token = self.read_number();
+                    let token = self.read_float();
                     return token;
                 }
                 '\'' => {
@@ -106,7 +106,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn read_number(&mut self) -> Option<Token> {
+    fn read_float(&mut self) -> Option<Token> {
         let start = self.pos;
         while self.pos < self.code.len() {
             let c = self.code.chars().nth(self.pos)?;
@@ -119,7 +119,7 @@ impl<'a> Lexer<'a> {
         }
 
         let num = &self.code[start..self.pos];
-        Some(Token::Number(num.parse().unwrap()))
+        Some(Token::Float(num.parse().unwrap()))
     }
 
     fn read_string_literal(&mut self) -> Option<Token> {

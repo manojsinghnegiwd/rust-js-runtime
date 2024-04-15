@@ -3,7 +3,7 @@ pub enum Token {
     Let,
     Identifier(String),
     Equals,
-    Number(usize),
+    Float(f64),
     StringLiteral(String),
     Semicolon,
     Log,
@@ -19,7 +19,7 @@ pub enum Token {
 #[derive(Debug, PartialEq)]
 pub enum Expr {
     Identifier(String),
-    Number(usize),
+    Float(f64),
     StringLiteral(String),
     Addition(Box<Expr>, Box<Expr>),
     Subtraction(Box<Expr>, Box<Expr>),

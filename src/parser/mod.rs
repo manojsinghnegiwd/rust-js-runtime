@@ -48,7 +48,7 @@ impl Parser {
             }
 
             let current_token_expr = match token {
-                Some(Token::Number(num)) => Expr::Number(num),
+                Some(Token::Float(num)) => Expr::Float(num),
                 Some(Token::Identifier(name)) => Expr::Identifier(name),
                 Some(Token::StringLiteral(literal)) => Expr::StringLiteral(literal),
                 Some(Token::Addition) => {
@@ -77,7 +77,7 @@ impl Parser {
 
                     return Expr::Division(Box::new(left), Box::new(right))
                 }
-                _ => panic!("Expected number or identifier"),
+                _ => panic!("Expected Float or identifier"),
             };
 
             expr.push(current_token_expr)

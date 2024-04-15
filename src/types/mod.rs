@@ -10,6 +10,7 @@ pub enum Token {
     ParenClose,
     ParenOpen,
     Comment(String),
+    Addition,
 }
 
 #[derive(Debug, PartialEq)]
@@ -17,6 +18,7 @@ pub enum Expr {
     Identifier(String),
     Number(usize),
     StringLiteral(String),
+    Addition(Box<Expr>, Box<Expr>)
 }
 
 #[derive(Debug, PartialEq)]

@@ -43,6 +43,10 @@ impl<'a> Lexer<'a> {
                     self.pos += 1;
                     return Some(Token::Addition);
                 }
+                '-' => {
+                    self.pos += 1;
+                    return Some(Token::subtraction);
+                }
                 ';' => {
                     self.pos += 1;
                     return Some(Token::Semicolon);

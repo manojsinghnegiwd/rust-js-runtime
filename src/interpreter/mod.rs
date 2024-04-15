@@ -42,7 +42,7 @@ impl Interpreter {
 
     fn eval_expr(&mut self, expr: Expr) -> Value {
         match expr {
-            Expr::Identifier(name) => self.global_scope.get(&name).unwrap().clone(),
+            Expr::Identifier(name) => self.global_scope.get(&name).expect(&format!("Trying to access an undefined variable: {}", name)).clone(),
             Expr::Float(num) => Value::Float(num),
             Expr::StringLiteral(literal) => Value::StringLiteral(literal),
             Expr::Addition(left, right) => {

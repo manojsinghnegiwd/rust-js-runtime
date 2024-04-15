@@ -70,8 +70,7 @@ impl<'a> Lexer<'a> {
                         _ => {
                             self.pos += 1;
                             return Some(Token::Division);
-                        },
-                        _ => panic!("Expected division"),
+                        }
                     };
 
                     return token;

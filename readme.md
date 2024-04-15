@@ -4,8 +4,8 @@ This is a JavaScript runtime written in Rust.
 
 # What it can do
 
-* Define variables which are number `let x = 0`
-* Log variables which are number `log(x)`
+* Define variable which can be number or string `let x = 0; let m = 'string'`
+* Log variables `log(x)`
 
 ## Project Structure
 

@@ -17,7 +17,8 @@ fn main() {
         log(y - x);
         log(y * x);
         y = 10;
-        log(y);
+        let isWorking = false;
+        log(isWorking);
 
         // {
         //     let x = 5;

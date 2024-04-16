@@ -14,6 +14,7 @@ pub enum Token {
     Subtraction,
     Multiplication,
     Division,
+    Boolean(bool),
 }
 
 #[derive(Debug, PartialEq)]
@@ -21,6 +22,7 @@ pub enum Expr {
     Identifier(String),
     Float(f64),
     StringLiteral(String),
+    Boolean(bool),
     Addition(Box<Expr>, Box<Expr>),
     Subtraction(Box<Expr>, Box<Expr>),
     Multiplication(Box<Expr>, Box<Expr>),

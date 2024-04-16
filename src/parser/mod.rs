@@ -55,12 +55,11 @@ impl Parser {
                 break;
             }
 
-            println!("{:?} here is a token", token);
-
             let current_token_expr = match token {
                 Some(Token::Float(num)) => Expr::Float(num),
                 Some(Token::Identifier(name)) => Expr::Identifier(name),
                 Some(Token::StringLiteral(literal)) => Expr::StringLiteral(literal),
+                Some(Token::Boolean(bool)) => Expr::Boolean(bool),
                 Some(Token::Addition) => {
                     let left = expr.pop().expect("Expected left side of addition");
                     let right = self.parse_expr();

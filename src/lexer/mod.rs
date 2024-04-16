@@ -101,6 +101,8 @@ impl<'a> Lexer<'a> {
         match ident {
             "let" => Some(Token::Let),
             "log" => Some(Token::Log),
+            "true" => Some(Token::Boolean(true)),
+            "false" => Some(Token::Boolean(false)),
             _ => Some(Token::Identifier(ident.to_string())),
         }
     }

@@ -95,17 +95,17 @@ impl Interpreter {
                 
                 }
             }
-            // Expr::Equals(left, right) => {
-            //     let left = self.eval_expr(*left);
-            //     let right = self.eval_expr(*right);
+            Expr::TypeCheckEquals(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
 
-            //     match (left, right) {
-            //         (Value::Float(left), Value::Float(right)) => Value::Boolean(left == right),
-            //         (Value::StringLiteral(left), Value::StringLiteral(right)) => Value::Boolean(left == right),
-            //         (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left == right),
-            //         _ => Value::Boolean(false),
-            //     }
-            // }
+                match (left, right) {
+                    (Value::Float(left), Value::Float(right)) => Value::Boolean(left == right),
+                    (Value::StringLiteral(left), Value::StringLiteral(right)) => Value::Boolean(left == right),
+                    (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left == right),
+                    _ => Value::Boolean(false),
+                }
+            }
             Expr::Addition(left, right) => {
                 let left = self.eval_expr(*left);
                 let right = self.eval_expr(*right);

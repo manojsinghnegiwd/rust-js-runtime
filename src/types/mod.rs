@@ -1,21 +1,22 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
-    Let,
     Identifier(String),
-    Equals,
     Float(f64),
     StringLiteral(String),
-    Semicolon,
-    Log,
-    ParenClose,
-    ParenOpen,
-    Comment(String),
+    Equals,
+    TypeCheckEquals,
+    Assign,
     Addition,
     Subtraction,
     Multiplication,
     Division,
     Boolean(bool),
-    Assign,
+    Semicolon,
+    ParenClose,
+    ParenOpen,
+    Comment(String),
+    Log,
+    Let,
 }
 
 #[derive(Debug, PartialEq)]
@@ -29,6 +30,7 @@ pub enum Expr {
     Multiplication(Box<Expr>, Box<Expr>),
     Division(Box<Expr>, Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
+    TypeCheckEquals(Box<Expr>, Box<Expr>),
 }
 
 #[derive(Debug, PartialEq)]

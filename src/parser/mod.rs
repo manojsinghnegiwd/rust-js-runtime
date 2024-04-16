@@ -14,9 +14,11 @@ impl Parser {
         let mut stmts = Vec::new();
 
         while let Some(token) = self.next_token() {
+            println!("{:?}", token);
             match token {
                 Token::Let => stmts.push(self.parse_let()),
                 Token::Log => stmts.push(self.parse_log()),
+                Token::If => stmts.push(self.parse_if()),
                 Token::Comment(comment) => stmts.push(Stmt::Comment(comment)),
                 Token::Identifier(name) => stmts.push(Stmt::Assignment(name, self.parse_assignment())),
                 _ => (),
@@ -90,8 +92,7 @@ impl Parser {
                     let right = self.parse_expr();
 
                     return Expr::Multiplication(Box::new(left), Box::new(right))
-                }
-                ,
+                },
                 Some(Token::Division) => {
                     let left = expr.pop().expect("Expected left side of division");
                     let right = self.parse_expr();
@@ -122,6 +123,41 @@ impl Parser {
                 }
             }
             _ => panic!("Expected opening parenthesis"),
+        }
+    }
+
+    fn parse_if(&mut self) -> Stmt {
+        let expr = match self.next_token() {
+            Some(Token::ParenOpen) => {
+                let condition = self.parse_expr();
+                let mut scope_tokens = Vec::new();
+
+                self.pos += 1;
+
+                match self.next_token() {
+                    Some(Token::BraceOpen) => {
+                        while let Some(token) = self.next_token() {
+                            if token == Token::BraceClose {
+                                break;
+                            } 
+
+                            scope_tokens.push(token);
+                        }
+
+                        let mut parser: Parser = Parser::new(scope_tokens);
+                        let ast = parser.parse();
+
+                        Expr::If(Box::new(condition), ast)
+                    },
+                    _ => panic!("Expected opening brace"),
+                }
+            },
+            _ => panic!("Expected opening parenthesis"),
+        };
+
+        match expr {
+            Expr::If(condition, stmts) => Stmt::If(condition, stmts),
+            _ => panic!("Expected if"),
         }
     }
 

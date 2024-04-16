@@ -28,6 +28,7 @@ impl Interpreter {
                 Stmt::Log(expr) => self.eval_log(expr),
                 Stmt::Assignment(name, value) => self.eval_let(name, value),
                 Stmt::Comment(_) => (),
+                Stmt::If(condition, stmts) => self.eval_if(condition, stmts),
             }
         }
     }
@@ -40,6 +41,19 @@ impl Interpreter {
     fn eval_log(&mut self, expr: Expr) {
         let value = self.eval_expr(expr);
         println!("{:?}", value);
+    }
+
+    fn eval_if(&mut self, condition: Box<Expr>, stmts: Vec<Stmt>) {
+        let result = self.eval_expr(*condition);
+
+        match result {
+            Value::Boolean(true) => {
+                self.eval(stmts);
+                Value::Boolean(true)
+            },
+            Value::Boolean(false) => Value::Boolean(false),
+            _ => panic!("Expected a boolean expression"),
+        };
     }
 
     fn eval_expr(&mut self, expr: Expr) -> Value {
@@ -141,7 +155,8 @@ impl Interpreter {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left / right),
                     _ => panic!("Expected two numbers"),
                 }
-            },
+            }
+            _ => panic!("Expected an expression"),
         }
     }
 }

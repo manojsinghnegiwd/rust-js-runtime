@@ -28,7 +28,7 @@ impl Parser {
 
     fn parse_assignment (&mut self) -> Expr {
         match self.next_token() {
-            Some(Token::Equals) => self.parse_expr(),
+            Some(Token::Assign) => self.parse_expr(),
             _ => panic!("Expected equals after identifier"),
         }
     }
@@ -40,7 +40,7 @@ impl Parser {
         };
 
         let value = match self.next_token() {
-            Some(Token::Equals) => self.parse_expr(),
+            Some(Token::Assign) => self.parse_expr(),
             _ => panic!("Expected equals after identifier"),
         };
 
@@ -60,6 +60,12 @@ impl Parser {
                 Some(Token::Identifier(name)) => Expr::Identifier(name),
                 Some(Token::StringLiteral(literal)) => Expr::StringLiteral(literal),
                 Some(Token::Boolean(bool)) => Expr::Boolean(bool),
+                Some(Token::Equals) => {
+                    let left = expr.pop().expect("Expected left side of equals");
+                    let right = self.parse_expr();
+
+                    return Expr::Equals(Box::new(left), Box::new(right));
+                }
                 Some(Token::Addition) => {
                     let left = expr.pop().expect("Expected left side of addition");
                     let right = self.parse_expr();

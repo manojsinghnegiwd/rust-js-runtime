@@ -15,6 +15,7 @@ pub enum Token {
     Multiplication,
     Division,
     Boolean(bool),
+    Assign,
 }
 
 #[derive(Debug, PartialEq)]
@@ -27,6 +28,7 @@ pub enum Expr {
     Subtraction(Box<Expr>, Box<Expr>),
     Multiplication(Box<Expr>, Box<Expr>),
     Division(Box<Expr>, Box<Expr>),
+    Equals(Box<Expr>, Box<Expr>),
 }
 
 #[derive(Debug, PartialEq)]

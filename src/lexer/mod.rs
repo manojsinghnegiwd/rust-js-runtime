@@ -35,6 +35,30 @@ impl<'a> Lexer<'a> {
                     let token = self.read_string_literal();
                     return token;
                 }
+                '!' => {
+                    let char = self.code.chars().nth(self.pos + 1)?;
+
+                    match char {
+                        '=' => {
+                            let char = self.code.chars().nth(self.pos + 2)?;
+
+                            match char {
+                                '=' => {
+                                    self.pos += 3;
+                                    return Some(Token::TypeNotEquals);
+                                },
+                                _ => {
+                                    self.pos += 2;
+                                    return Some(Token::NotEquals);
+                                }
+                            }
+                        },
+                        _ => {
+                            self.pos += 1;
+                            return Some(Token::Not);
+                        }
+                    }
+                }
                 '=' => {
                     let char = self.code.chars().nth(self.pos + 1)?;
 

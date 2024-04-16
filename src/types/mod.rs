@@ -3,8 +3,11 @@ pub enum Token {
     Identifier(String),
     Float(f64),
     StringLiteral(String),
+    Not,
     Equals,
     TypeCheckEquals,
+    NotEquals,
+    TypeNotEquals,
     Assign,
     Addition,
     Subtraction,
@@ -36,6 +39,8 @@ pub enum Expr {
     Division(Box<Expr>, Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
     TypeCheckEquals(Box<Expr>, Box<Expr>),
+    NotEquals(Box<Expr>, Box<Expr>),
+    TypeNotEquals(Box<Expr>, Box<Expr>),
     If(Box<Expr>, Vec<Stmt>),
 }
 

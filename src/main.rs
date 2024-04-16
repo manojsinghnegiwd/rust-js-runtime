@@ -21,7 +21,7 @@ fn main() {
         // log(true == 1);
         // log(true === 1)
 
-        log(x == 3);
+        log(x != 2);
 
         if (x == 4) {
             log('x is 3');

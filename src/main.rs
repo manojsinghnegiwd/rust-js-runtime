@@ -18,7 +18,8 @@ fn main() {
         log(y * x);
         y = 10;
         let isWorking = 'true' == false;
-        log(isWorking);
+        log(true == 1);
+        log(true === 1)
         // {
         //     let x = 5;
         //     log(x);

@@ -40,8 +40,18 @@ impl<'a> Lexer<'a> {
 
                     match char {
                         '=' => {
-                            self.pos += 2;
-                            return Some(Token::Equals);
+                            let char = self.code.chars().nth(self.pos + 2)?;
+
+                            match char {
+                                '=' => {
+                                    self.pos += 3;
+                                    return Some(Token::TypeCheckEquals);
+                                },
+                                _ => {
+                                    self.pos += 2;
+                                    return Some(Token::Equals);
+                                }
+                            }
                         },
                         _ => {
                             self.pos += 1;

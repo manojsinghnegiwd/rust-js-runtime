@@ -66,6 +66,12 @@ impl Parser {
 
                     return Expr::Equals(Box::new(left), Box::new(right));
                 }
+                Some(Token::TypeCheckEquals) => {
+                    let left = expr.pop().expect("Expected left side of equals");
+                    let right = self.parse_expr();
+
+                    return Expr::TypeCheckEquals(Box::new(left), Box::new(right));
+                }
                 Some(Token::Addition) => {
                     let left = expr.pop().expect("Expected left side of addition");
                     let right = self.parse_expr();

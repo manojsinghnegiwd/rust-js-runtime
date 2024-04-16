@@ -5,6 +5,7 @@ use crate::types::{Expr, Stmt};
 enum Value {
     Float(f64),
     StringLiteral(String),
+    Boolean(bool),
 }
 
 pub struct Interpreter {
@@ -46,6 +47,7 @@ impl Interpreter {
             Expr::Identifier(name) => self.global_scope.get(&name).expect(&format!("Trying to access an undefined variable: {}", name)).clone(),
             Expr::Float(num) => Value::Float(num),
             Expr::StringLiteral(literal) => Value::StringLiteral(literal),
+            Expr::Boolean(bool) => Value::Boolean(bool),
             Expr::Addition(left, right) => {
                 let left = self.eval_expr(*left);
                 let right = self.eval_expr(*right);

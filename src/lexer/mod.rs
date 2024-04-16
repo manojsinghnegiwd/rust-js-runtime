@@ -75,6 +75,14 @@ impl<'a> Lexer<'a> {
                     self.pos += 1;
                     return Some(Token::Semicolon);
                 }
+                '{' => {
+                    self.pos += 1;
+                    return Some(Token::BraceOpen);
+                }
+                '}' => {
+                    self.pos += 1;
+                    return Some(Token::BraceClose);
+                }
                 '(' => {
                     self.pos += 1;
                     return Some(Token::ParenOpen);
@@ -123,6 +131,9 @@ impl<'a> Lexer<'a> {
             "log" => Some(Token::Log),
             "true" => Some(Token::Boolean(true)),
             "false" => Some(Token::Boolean(false)),
+            "if" => Some(Token::If),
+            "else" => Some(Token::Else),
+            "elseif" => Some(Token::ElseIf),
             _ => Some(Token::Identifier(ident.to_string())),
         }
     }

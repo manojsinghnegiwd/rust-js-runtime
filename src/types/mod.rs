@@ -12,9 +12,14 @@ pub enum Token {
     Division,
     Boolean(bool),
     Semicolon,
-    ParenClose,
+    BraceOpen,
+    BraceClose,
     ParenOpen,
+    ParenClose,
     Comment(String),
+    If,
+    Else,
+    ElseIf,
     Log,
     Let,
 }
@@ -31,12 +36,14 @@ pub enum Expr {
     Division(Box<Expr>, Box<Expr>),
     Equals(Box<Expr>, Box<Expr>),
     TypeCheckEquals(Box<Expr>, Box<Expr>),
+    If(Box<Expr>, Vec<Stmt>),
 }
 
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
     Let(String, Expr),
     Assignment(String, Expr),
+    If(Box<Expr>, Vec<Stmt>),
     Log(Expr),
     Comment(String),
 }

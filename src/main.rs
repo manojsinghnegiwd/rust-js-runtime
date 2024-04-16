@@ -10,16 +10,26 @@ use lexer::Lexer;
 fn main() {
     let code = r#"
         let x = 3;
-        let y = x + 3 + 3;
-        let m = 'Manoj';
-        log(x + 1);
-        log(m);
-        log(y - x);
-        log(y * x);
-        y = 10;
-        let isWorking = 'true' == false;
-        log(true == 1);
-        log(true === 1)
+        // let y = x + 3 + 3;
+        // let m = 'Manoj';
+        // log(x + 1);
+        // log(m);
+        // log(y - x);
+        // log(y * x);
+        // y = 10;
+        // let isWorking = 'true' == false;
+        // log(true == 1);
+        // log(true === 1)
+
+        log(x == 3);
+
+        if (x == 4) {
+            log('x is 3');
+        }
+        // } else {
+        //     log('x is not 3');
+        // }
+
         // {
         //     let x = 5;
         //     log(x);

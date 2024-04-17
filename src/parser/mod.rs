@@ -18,7 +18,7 @@ impl Parser {
                 Token::Let => stmts.push(self.parse_let()),
                 Token::Log => stmts.push(self.parse_log()),
                 Token::If => stmts.push(self.parse_if()),
-                Token::Comment(comment) => stmts.push(Stmt::Comment(comment)),
+                Token::Comment(_) => (),
                 Token::Identifier(name) => stmts.push(Stmt::Assignment(name, self.parse_assignment())),
                 _ => (),
             }
@@ -177,18 +177,14 @@ impl Parser {
                                                 Expr::Boolean(true)
                                             ),
                                             else_ast,
-                                            Box::new(
-                                                Stmt::Comment(
-                                                    "No else".to_string()
-                                                )
-                                            )
+                                            Box::new(Stmt::None)
                                         )
                                     )
                                 )
                             }
                             _ => {
                                 self.pos -= 1;
-                                Expr::ControlFlow(Box::new(condition), if_ast, Box::new(Stmt::Comment("No else".to_string())))
+                                Expr::ControlFlow(Box::new(condition), if_ast, Box::new(Stmt::None))
                             },
                         }
                     },

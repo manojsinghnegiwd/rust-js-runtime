@@ -49,6 +49,6 @@ pub enum Stmt {
     Let(String, Expr),
     Assignment(String, Expr),
     ControlFlow(Box<Expr>, Vec<Stmt>, Box<Stmt>),
-    Log(Expr),
-    Comment(String),
+    None,
+    Log(Expr)
 }

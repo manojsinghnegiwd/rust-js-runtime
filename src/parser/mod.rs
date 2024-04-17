@@ -158,7 +158,7 @@ impl Parser {
                         match next_token {
                             Some(Token::ElseIf) => {
                                 let else_if_stmt = self.parse_if();
-                                Expr::If(Box::new(condition), if_ast, Box::new(else_if_stmt))
+                                Expr::ControlFlow(Box::new(condition), if_ast, Box::new(else_if_stmt))
                             }
                             Some(Token::Else) => {
                                 // 
@@ -168,11 +168,11 @@ impl Parser {
 
                                 let _token = self.tokens.get(self.pos);
 
-                                Expr::If(
+                                Expr::ControlFlow(
                                     Box::new(condition),
                                     if_ast,
                                     Box::new(
-                                        Stmt::If(
+                                        Stmt::ControlFlow(
                                             Box::new(
                                                 Expr::Boolean(true)
                                             ),
@@ -188,7 +188,7 @@ impl Parser {
                             }
                             _ => {
                                 self.pos -= 1;
-                                Expr::If(Box::new(condition), if_ast, Box::new(Stmt::Comment("No else".to_string())))
+                                Expr::ControlFlow(Box::new(condition), if_ast, Box::new(Stmt::Comment("No else".to_string())))
                             },
                         }
                     },
@@ -199,7 +199,7 @@ impl Parser {
         };
 
         match expr {
-            Expr::If(condition, stmts, else_stmt) => Stmt::If(condition, stmts, else_stmt),
+            Expr::ControlFlow(condition, stmts, else_stmt) => Stmt::ControlFlow(condition, stmts, else_stmt),
             _ => panic!("Expected if"),
         }
     }

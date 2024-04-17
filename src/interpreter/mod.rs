@@ -28,7 +28,7 @@ impl Interpreter {
                 Stmt::Log(expr) => self.eval_log(expr),
                 Stmt::Assignment(name, value) => self.eval_let(name, value),
                 Stmt::Comment(_) => (),
-                Stmt::If(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
+                Stmt::ControlFlow(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
             }
         }
     }
@@ -52,7 +52,7 @@ impl Interpreter {
             },
             Value::Boolean(false) => {
                 match *else_stmt {
-                    Stmt::If(condition, stmts, nested_else_stmt) => {
+                    Stmt::ControlFlow(condition, stmts, nested_else_stmt) => {
                         self.eval_if(condition, stmts, nested_else_stmt);
                     },
                     _ => ()

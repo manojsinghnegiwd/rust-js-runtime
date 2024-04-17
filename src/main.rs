@@ -35,7 +35,7 @@ fn main() {
     let mut i = 0;
 
     for token in &tokens {
-        println!("{:?}, {:?} token", token, i);
+        println!("{:?} => {:?}", i, token);
         i += 1;
     }
 
@@ -43,11 +43,14 @@ fn main() {
 
     println!("Parsing started... \n");
 
+    let mut j = 0;
+
     let mut parser = Parser::new(tokens);
     let ast = parser.parse();
 
     for stmt in &ast {
-        println!("{:?}", stmt);
+        println!("{:?} => {:?}", j, stmt);
+        j += 1;
     }
 
     println!("\nParsing completed... \n");

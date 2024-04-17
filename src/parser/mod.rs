@@ -147,15 +147,12 @@ impl Parser {
                 self.pos += 1;
 
                 let token = self.tokens.get(self.pos);
-                println!("{:?}, {:?}", token, self.pos);
 
                 match self.next_token() {
                     Some(Token::BraceOpen) => {
                         let if_ast = self.parse_scope();
 
                         let next_token = self.next_token();
-
-                        println!("{:?}, {:?} BraceOpen", next_token, self.pos);
 
                         match next_token {
                             Some(Token::ElseIf) => {
@@ -169,9 +166,6 @@ impl Parser {
                                 let else_ast = self.parse_scope();
 
                                 let token = self.tokens.get(self.pos);
-
-                                println!("{:?} Else", else_ast);
-                                println!("{:?} Else", token);
 
                                 Expr::If(
                                     Box::new(condition),
@@ -192,8 +186,6 @@ impl Parser {
                                 )
                             }
                             _ => {
-                                let token = self.tokens.get(self.pos);
-                                println!("{:?}, {:?}", token, self.pos);
                                 self.pos -= 1;
                                 Expr::If(Box::new(condition), if_ast, Box::new(Stmt::Comment("No else".to_string())))
                             },

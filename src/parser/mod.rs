@@ -28,7 +28,7 @@ impl Parser {
     }
 
     fn parse_assignment (&mut self) -> Expr {
-        let token = self.tokens.get(self.pos);
+        let _token = self.tokens.get(self.pos);
         match self.next_token() {
             Some(Token::Assign) => self.parse_expr(),
             _ => panic!("Expected equals after identifier in assignment"),
@@ -52,7 +52,8 @@ impl Parser {
     fn parse_expr(&mut self) -> Expr {
         let mut expr = Vec::new();
 
-        while let token = self.next_token() {
+        loop {
+            let token = self.next_token();
             if token == Some(Token::Semicolon) || token == Some(Token::ParenClose) {
                 break;
             }
@@ -146,7 +147,7 @@ impl Parser {
                 // skip closing parenthesis
                 self.pos += 1;
 
-                let token = self.tokens.get(self.pos);
+                let _token = self.tokens.get(self.pos);
 
                 match self.next_token() {
                     Some(Token::BraceOpen) => {
@@ -165,7 +166,7 @@ impl Parser {
 
                                 let else_ast = self.parse_scope();
 
-                                let token = self.tokens.get(self.pos);
+                                let _token = self.tokens.get(self.pos);
 
                                 Expr::If(
                                     Box::new(condition),

@@ -10,7 +10,9 @@ This is a JavaScript runtime written in Rust.
 
 # Roadmap
 * ~~Implement comments~~
-* Implement math calculations
+* ~~Implement math calculations~~
+* ~~Implement control flow~~
+* ~~Implement equality~~
 * Implement scope
 * Implement function
 

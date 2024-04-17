@@ -27,7 +27,7 @@ impl Interpreter {
                 Stmt::Let(name, value) => self.eval_let(name, value),
                 Stmt::Log(expr) => self.eval_log(expr),
                 Stmt::Assignment(name, value) => self.eval_let(name, value),
-                Stmt::Comment(_) => (),
+                Stmt::None => (),
                 Stmt::ControlFlow(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
             }
         }

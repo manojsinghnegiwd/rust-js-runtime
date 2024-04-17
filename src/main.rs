@@ -11,9 +11,9 @@ fn main() {
     let code = r#"
         let x = 6;
 
-        if (x == 3) {
-            log(x);
-        }
+        // if (x == 3) {
+        //     log(x);
+        // }
 
         if (x == 4) {
             log('x is 4');
@@ -49,7 +49,7 @@ fn main() {
     let ast = parser.parse();
 
     for stmt in &ast {
-        println!("{:?} => {:?}", j, stmt);
+        println!("{:?} => {:#?}", j, stmt);
         j += 1;
     }
 

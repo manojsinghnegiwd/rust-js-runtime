@@ -9,35 +9,19 @@ use lexer::Lexer;
 
 fn main() {
     let code = r#"
-        let x = 3;
-        // let y = x + 3 + 3;
-        // let m = 'Manoj';
-        // log(x + 1);
-        // log(m);
-        // log(y - x);
-        // log(y * x);
-        // y = 10;
-        // let isWorking = 'true' == false;
-        // log(true == 1);
-        // log(true === 1)
+        let x = 6;
 
-        log(x != 2);
+        if (x == 3) {
+            log(x);
+        }
 
         if (x == 4) {
+            log('x is 4');
+        } else if (x == 6) {
+            log('x is 6');
+        } else {
             log('x is 3');
         }
-        // } else {
-        //     log('x is not 3');
-        // }
-
-        // {
-        //     let x = 5;
-        //     log(x);
-        // }
-
-        // reactive {
-        //     log(x);
-        // }
     "#;
     let mut lexer = Lexer::new(code);
     let mut tokens = Vec::new();
@@ -48,8 +32,11 @@ fn main() {
         tokens.push(token);
     }
 
+    let mut i = 0;
+
     for token in &tokens {
-        println!("{:?}", token);
+        println!("{:?}, {:?} token", token, i);
+        i += 1;
     }
 
     println!("\nLexer completed... \n");

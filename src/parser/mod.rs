@@ -14,7 +14,6 @@ impl Parser {
         let mut stmts = Vec::new();
 
         while let Some(token) = self.next_token() {
-            println!("{:?}", token);
             match token {
                 Token::Let => stmts.push(self.parse_let()),
                 Token::Log => stmts.push(self.parse_log()),
@@ -29,9 +28,10 @@ impl Parser {
     }
 
     fn parse_assignment (&mut self) -> Expr {
+        let token = self.tokens.get(self.pos);
         match self.next_token() {
             Some(Token::Assign) => self.parse_expr(),
-            _ => panic!("Expected equals after identifier"),
+            _ => panic!("Expected equals after identifier in assignment"),
         }
     }
 
@@ -142,24 +142,62 @@ impl Parser {
         let expr = match self.next_token() {
             Some(Token::ParenOpen) => {
                 let condition = self.parse_expr();
-                let mut scope_tokens = Vec::new();
 
+                // skip closing parenthesis
                 self.pos += 1;
+
+                let token = self.tokens.get(self.pos);
+                println!("{:?}, {:?}", token, self.pos);
 
                 match self.next_token() {
                     Some(Token::BraceOpen) => {
-                        while let Some(token) = self.next_token() {
-                            if token == Token::BraceClose {
-                                break;
-                            } 
+                        let if_ast = self.parse_scope();
 
-                            scope_tokens.push(token);
+                        let next_token = self.next_token();
+
+                        println!("{:?}, {:?} BraceOpen", next_token, self.pos);
+
+                        match next_token {
+                            Some(Token::ElseIf) => {
+                                let else_if_stmt = self.parse_if();
+                                Expr::If(Box::new(condition), if_ast, Box::new(else_if_stmt))
+                            }
+                            Some(Token::Else) => {
+                                // 
+                                self.pos += 1;
+
+                                let else_ast = self.parse_scope();
+
+                                let token = self.tokens.get(self.pos);
+
+                                println!("{:?} Else", else_ast);
+                                println!("{:?} Else", token);
+
+                                Expr::If(
+                                    Box::new(condition),
+                                    if_ast,
+                                    Box::new(
+                                        Stmt::If(
+                                            Box::new(
+                                                Expr::Boolean(true)
+                                            ),
+                                            else_ast,
+                                            Box::new(
+                                                Stmt::Comment(
+                                                    "No else".to_string()
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+                            _ => {
+                                let token = self.tokens.get(self.pos);
+                                println!("{:?}, {:?}", token, self.pos);
+                                self.pos -= 1;
+                                Expr::If(Box::new(condition), if_ast, Box::new(Stmt::Comment("No else".to_string())))
+                            },
                         }
-
-                        let mut parser: Parser = Parser::new(scope_tokens);
-                        let ast = parser.parse();
-
-                        Expr::If(Box::new(condition), ast)
                     },
                     _ => panic!("Expected opening brace"),
                 }
@@ -168,9 +206,26 @@ impl Parser {
         };
 
         match expr {
-            Expr::If(condition, stmts) => Stmt::If(condition, stmts),
+            Expr::If(condition, stmts, else_stmt) => Stmt::If(condition, stmts, else_stmt),
             _ => panic!("Expected if"),
         }
+    }
+
+    fn parse_scope (&mut self) -> Vec<Stmt> {
+        let mut scope_tokens = Vec::new();
+
+        while let Some(token) = self.next_token() {
+            if token == Token::BraceClose {
+                break;
+            } 
+
+            scope_tokens.push(token);
+        }
+
+        let mut parser: Parser = Parser::new(scope_tokens);
+        let ast = parser.parse();
+
+        ast
     }
 
     fn next_token(&mut self) -> Option<Token> {

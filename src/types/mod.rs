@@ -21,8 +21,8 @@ pub enum Token {
     ParenClose,
     Comment(String),
     If,
-    Else,
     ElseIf,
+    Else,
     Log,
     Let,
 }
@@ -41,14 +41,16 @@ pub enum Expr {
     TypeCheckEquals(Box<Expr>, Box<Expr>),
     NotEquals(Box<Expr>, Box<Expr>),
     TypeNotEquals(Box<Expr>, Box<Expr>),
-    If(Box<Expr>, Vec<Stmt>),
+    If(Box<Expr>, Vec<Stmt>, Box<Stmt>),
+    // ControlFlow(Box<Expr>, Vec<Stmt>, Vec<Stmt>),
 }
 
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
     Let(String, Expr),
     Assignment(String, Expr),
-    If(Box<Expr>, Vec<Stmt>),
+    If(Box<Expr>, Vec<Stmt>, Box<Stmt>),
+    // ControlFlow(Box<Expr>, Vec<Stmt>, Vec<Stmt>),
     Log(Expr),
     Comment(String),
 }

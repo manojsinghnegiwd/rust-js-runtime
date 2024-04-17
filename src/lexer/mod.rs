@@ -156,8 +156,20 @@ impl<'a> Lexer<'a> {
             "true" => Some(Token::Boolean(true)),
             "false" => Some(Token::Boolean(false)),
             "if" => Some(Token::If),
-            "else" => Some(Token::Else),
-            "elseif" => Some(Token::ElseIf),
+            "else" => {
+                self.pos += 1;
+
+                let next_token = self.next_token();
+
+                match next_token {
+                    Some(Token::If) => Some(Token::ElseIf),
+                    Some(Token::BraceOpen) => {
+                        self.pos -= 1;
+                        Some(Token::Else)
+                    },
+                    _ => panic!("Unexpected token")
+                }
+            },
             _ => Some(Token::Identifier(ident.to_string())),
         }
     }

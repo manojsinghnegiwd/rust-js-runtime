@@ -28,7 +28,7 @@ impl Interpreter {
                 Stmt::Log(expr) => self.eval_log(expr),
                 Stmt::Assignment(name, value) => self.eval_let(name, value),
                 Stmt::Comment(_) => (),
-                Stmt::If(condition, stmts) => self.eval_if(condition, stmts),
+                Stmt::If(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
             }
         }
     }
@@ -43,15 +43,21 @@ impl Interpreter {
         println!("{:?}", value);
     }
 
-    fn eval_if(&mut self, condition: Box<Expr>, stmts: Vec<Stmt>) {
+    fn eval_if(&mut self, condition: Box<Expr>, stmts: Vec<Stmt>, else_stmt: Box<Stmt>) {
         let result = self.eval_expr(*condition);
 
         match result {
             Value::Boolean(true) => {
                 self.eval(stmts);
-                Value::Boolean(true)
             },
-            Value::Boolean(false) => Value::Boolean(false),
+            Value::Boolean(false) => {
+                match *else_stmt {
+                    Stmt::If(condition, stmts, nested_else_stmt) => {
+                        self.eval_if(condition, stmts, nested_else_stmt);
+                    },
+                    _ => ()
+                }
+            },
             _ => panic!("Expected a boolean expression"),
         };
     }

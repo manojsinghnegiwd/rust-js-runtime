@@ -26,7 +26,7 @@ impl Interpreter {
             match stmt {
                 Stmt::Let(name, value) => self.eval_let(name, value),
                 Stmt::Log(expr) => self.eval_log(expr),
-                Stmt::Assignment(name, value) => self.eval_let(name, value),
+                Stmt::Assignment(name, value) => self.eval_assignment(name, value),
                 Stmt::None => (),
                 Stmt::ControlFlow(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
             }
@@ -34,6 +34,15 @@ impl Interpreter {
     }
 
     fn eval_let(&mut self, name: String, value: Expr) {
+        if self.global_scope.contains_key(&name) {
+            panic!("Variable already defined: {}", name);
+        }
+        
+        let value = self.eval_expr(value);
+        self.global_scope.insert(name, value);
+    }
+
+    fn eval_assignment(&mut self, name: String, value: Expr) {
         let value = self.eval_expr(value);
         self.global_scope.insert(name, value);
     }

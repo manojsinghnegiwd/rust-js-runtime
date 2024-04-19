@@ -32,9 +32,13 @@ impl<'a> Lexer<'a> {
                     return token;
                 }
                 '\'' => {
-                    let token = self.read_string_literal();
+                    let token = self.read_string_literal('\'');
                     return token;
                 }
+                '"' => {
+                    let token = self.read_string_literal('\"');
+                    return token;
+                },
                 '!' => {
                     let char = self.code.chars().nth(self.pos + 1)?;
 
@@ -190,7 +194,7 @@ impl<'a> Lexer<'a> {
         Some(Token::Float(num.parse().unwrap()))
     }
 
-    fn read_string_literal(&mut self) -> Option<Token> {
+    fn read_string_literal(&mut self, delimiter: char) -> Option<Token> {
         let start: usize = self.pos;
 
         // Skip the opening quote
@@ -199,7 +203,7 @@ impl<'a> Lexer<'a> {
         while self.pos < self.code.len() {
             let c = self.code.chars().nth(self.pos)?;
 
-            if c == '\'' {
+            if c == delimiter {
                 break;
             }
 

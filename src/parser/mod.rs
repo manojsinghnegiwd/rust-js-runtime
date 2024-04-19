@@ -19,6 +19,9 @@ impl Parser {
                 Token::Log => stmts.push(self.parse_log()),
                 Token::If => stmts.push(self.parse_if()),
                 Token::Comment(_) => (),
+                Token::BraceOpen => {
+                    stmts.push(Stmt::CodeBlock(self.parse_scope()))
+                },
                 Token::Identifier(name) => stmts.push(Stmt::Assignment(name, self.parse_assignment())),
                 _ => (),
             }
@@ -158,7 +161,7 @@ impl Parser {
                         match next_token {
                             Some(Token::ElseIf) => {
                                 let else_if_stmt = self.parse_if();
-                                Expr::ControlFlow(Box::new(condition), if_ast, Box::new(else_if_stmt))
+                                Expr::ControlFlow(Box::new(condition), Box::new(Stmt::CodeBlock(if_ast)), Box::new(else_if_stmt))
                             }
                             Some(Token::Else) => {
                                 // 
@@ -170,13 +173,13 @@ impl Parser {
 
                                 Expr::ControlFlow(
                                     Box::new(condition),
-                                    if_ast,
+                                    Box::new(Stmt::CodeBlock(if_ast)),
                                     Box::new(
                                         Stmt::ControlFlow(
                                             Box::new(
                                                 Expr::Boolean(true)
                                             ),
-                                            else_ast,
+                                            Box::new(Stmt::CodeBlock(else_ast)),
                                             Box::new(Stmt::None)
                                         )
                                     )
@@ -184,7 +187,7 @@ impl Parser {
                             }
                             _ => {
                                 self.pos -= 1;
-                                Expr::ControlFlow(Box::new(condition), if_ast, Box::new(Stmt::None))
+                                Expr::ControlFlow(Box::new(condition), Box::new(Stmt::CodeBlock(if_ast)), Box::new(Stmt::None))
                             },
                         }
                     },
@@ -200,16 +203,28 @@ impl Parser {
         }
     }
 
-    fn parse_scope (&mut self) -> Vec<Stmt> {
+    fn get_tokens(&mut self) -> Vec<Token> {
         let mut scope_tokens = Vec::new();
 
         while let Some(token) = self.next_token() {
-            if token == Token::BraceClose {
-                break;
-            } 
-
-            scope_tokens.push(token);
+            match token {
+                Token::BraceClose => {
+                    scope_tokens.push(token);
+                    break;
+                },
+                Token::BraceOpen => {
+                    scope_tokens.push(token);
+                    scope_tokens.append(&mut self.get_tokens());
+                }
+                _ => scope_tokens.push(token),
+            }
         }
+
+        scope_tokens
+    }
+
+    fn parse_scope (&mut self) -> Vec<Stmt> {
+        let scope_tokens = self.get_tokens();
 
         let mut parser: Parser = Parser::new(scope_tokens);
         let ast = parser.parse();

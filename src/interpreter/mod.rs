@@ -1,23 +1,21 @@
-use std::collections::HashMap;
-use crate::types::{Expr, Stmt};
-
-#[derive(Clone, Debug, PartialEq)]
-enum Value {
-    Float(f64),
-    StringLiteral(String),
-    Boolean(bool),
-}
+use crate::scope::Scope;
+use crate::types::{Expr, Stmt, Value};
+use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct Interpreter {
-    global_scope: HashMap<String, Value>,
+    scope: Option<Rc<RefCell<Scope>>>,
 }
 
 impl Interpreter {
-    pub fn new() -> Self {
-        let global_scope = HashMap::new();
-
-        Interpreter {
-            global_scope,
+    pub fn new(scope: Option<Scope>) -> Self {
+        match scope {
+            Some(scope) => Interpreter {
+                scope: Some(Rc::new(RefCell::new(scope))),
+            },
+            None => Interpreter {
+                scope: None,
+            }
         }
     }
 
@@ -29,35 +27,58 @@ impl Interpreter {
                 Stmt::Assignment(name, value) => self.eval_assignment(name, value),
                 Stmt::None => (),
                 Stmt::ControlFlow(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
+                Stmt::CodeBlock(stmts) => self.eval_code_block(stmts),
             }
-        }
+        };
+    }
+
+    fn eval_code_block(&mut self, stmts: Vec<Stmt>) {
+        let scope = Scope::with_rc(self.scope.clone());
+        let mut interpreter = Interpreter::new(Some(scope));
+        interpreter.eval(stmts);
     }
 
     fn eval_let(&mut self, name: String, value: Expr) {
-        if self.global_scope.contains_key(&name) {
-            panic!("Variable already defined: {}", name);
-        }
-        
         let value = self.eval_expr(value);
-        self.global_scope.insert(name, value);
+        match &mut self.scope {
+            Some(scope) => {
+                if scope.borrow().contains_key_local(&name) {
+                    panic!("Variable already defined: {}", name);
+                }
+                
+                scope.borrow_mut().define(name, value);
+            },
+            None => (),
+        }
     }
 
     fn eval_assignment(&mut self, name: String, value: Expr) {
         let value = self.eval_expr(value);
-        self.global_scope.insert(name, value);
+
+        match &mut self.scope {
+            Some(scope) => {
+                scope.borrow_mut().assign(name, value);
+            },
+            None => (),
+        }
     }
 
     fn eval_log(&mut self, expr: Expr) {
         let value = self.eval_expr(expr);
-        println!("{:?}", value);
+        println!("{:#?}", value);
     }
 
-    fn eval_if(&mut self, condition: Box<Expr>, stmts: Vec<Stmt>, else_stmt: Box<Stmt>) {
+    fn eval_if(&mut self, condition: Box<Expr>, stmts: Box<Stmt>, else_stmt: Box<Stmt>) {
         let result = self.eval_expr(*condition);
 
         match result {
             Value::Boolean(true) => {
-                self.eval(stmts);
+                match *stmts {
+                    Stmt::CodeBlock(code_block_stmts) => {
+                        self.eval_code_block(code_block_stmts);
+                    },
+                    _ => ()
+                }
             },
             Value::Boolean(false) => {
                 match *else_stmt {
@@ -73,7 +94,17 @@ impl Interpreter {
 
     fn eval_expr(&mut self, expr: Expr) -> Value {
         match expr {
-            Expr::Identifier(name) => self.global_scope.get(&name).expect(&format!("Trying to access an undefined variable: {}", name)).clone(),
+            Expr::Identifier(name) => {
+                match &mut self.scope {
+                    Some(scope) => {
+                        match scope.borrow().get(&name) {
+                            Some(value) => value.clone(),
+                            None => panic!("Variable not found: {}", name),
+                        }
+                    },
+                    None => Value::Boolean(false),
+                }
+            },
             Expr::Float(num) => Value::Float(num),
             Expr::StringLiteral(literal) => Value::StringLiteral(literal),
             Expr::Boolean(bool) => Value::Boolean(bool),

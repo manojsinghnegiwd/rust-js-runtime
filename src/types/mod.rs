@@ -41,14 +41,22 @@ pub enum Expr {
     TypeCheckEquals(Box<Expr>, Box<Expr>),
     NotEquals(Box<Expr>, Box<Expr>),
     TypeNotEquals(Box<Expr>, Box<Expr>),
-    ControlFlow(Box<Expr>, Vec<Stmt>, Box<Stmt>),
+    ControlFlow(Box<Expr>, Box<Stmt>, Box<Stmt>),
 }
 
 #[derive(Debug, PartialEq)]
 pub enum Stmt {
     Let(String, Expr),
     Assignment(String, Expr),
-    ControlFlow(Box<Expr>, Vec<Stmt>, Box<Stmt>),
+    ControlFlow(Box<Expr>, Box<Stmt>, Box<Stmt>),
+    CodeBlock(Vec<Stmt>),
     None,
     Log(Expr)
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Value {
+    Float(f64),
+    StringLiteral(String),
+    Boolean(bool),
 }

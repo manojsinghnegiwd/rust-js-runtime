@@ -2,27 +2,35 @@ mod parser;
 mod types;
 mod interpreter;
 mod lexer;
+mod scope;
 
 use parser::Parser;
 use interpreter::Interpreter;
 use lexer::Lexer;
+use scope::Scope;
 
 fn main() {
     let code = r#"
         let x = 6;
 
-        // if (x == 3) {
-        //     log(x);
-        // }
+        {
+            let y = 8;
+            let x = 1;
+            log(x); => 1
 
-        if (x == 4) {
-            log('x is 4');
-        } else if (x == 6) {
-            log('x is 6');
-        } else {
-            log('x is 3');
+            if (x == 1) {
+                let y = 2;
+                z = 3;
+                log(x); => 3
+                log(y); => 2
+            }
+
+            log(x); => 3
+            log(y); => 8
         }
+
     "#;
+
     let mut lexer = Lexer::new(code);
     let mut tokens = Vec::new();
 
@@ -57,7 +65,9 @@ fn main() {
 
     println!("Execution started... \n");
 
-    let mut interpreter = Interpreter::new();
+    let scope = Scope::new(None);
+
+    let mut interpreter = Interpreter::new(Some(scope));
     interpreter.eval(ast);
 
     println!("\nExecution completed... \n");

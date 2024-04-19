@@ -16,17 +16,16 @@ fn main() {
         {
             let y = 8;
             let x = 1;
-            log(x); => 1
+            log(x);
 
             if (x == 1) {
                 let y = 2;
-                z = 3;
-                log(x); => 3
-                log(y); => 2
+                log(x + " is hello");
+                log(y);
             }
 
-            log(x); => 3
-            log(y); => 8
+            log(x);
+            log(y);
         }
 
     "#;

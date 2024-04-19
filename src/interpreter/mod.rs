@@ -224,6 +224,8 @@ impl Interpreter {
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left + right),
+                    (Value::Float(left), Value::StringLiteral(right)) => Value::StringLiteral(format!("{}{}", left, right)),
+                    (Value::StringLiteral(left), Value::Float(right)) => Value::StringLiteral(format!("{}{}", left, right)),
                     _ => panic!("Expected two numbers"),
                 }
             },

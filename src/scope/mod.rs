@@ -54,17 +54,6 @@ impl Scope {
         self.variables.borrow().contains_key(name)
     }
 
-    pub fn contains_key(&self, name: &str) -> bool {
-        if self.variables.borrow().contains_key(name) {
-            return true
-        }
-
-        match &self.parent {
-            Some(parent) => parent.borrow().contains_key(name),
-            None => false,
-        }
-    }
-
     pub fn assign (&mut self, name: String, value: Value) {
         if self.variables.borrow().contains_key(&name) {
             self.variables.borrow_mut().insert(name, value);

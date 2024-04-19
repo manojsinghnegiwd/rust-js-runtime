@@ -1,4 +1,4 @@
-use crate::types::{Token};
+use crate::types::Token;
 
 #[derive(Debug, PartialEq)]
 

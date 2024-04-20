@@ -19,10 +19,13 @@ impl Parser {
                 Token::Log => stmts.push(self.parse_log()),
                 Token::If => stmts.push(self.parse_if()),
                 Token::Comment(_) => (),
-                Token::BraceOpen => {
-                    stmts.push(Stmt::CodeBlock(self.parse_scope()))
+                Token::BraceOpen => stmts.push(Stmt::CodeBlock(self.parse_scope())),
+                Token::Function => stmts.push(self.parse_function()),
+                Token::Identifier(name) => stmts.push(self.parse_assignment(name)),
+                Token::Return => {
+                    stmts.push(self.parse_return());
+                    break;
                 },
-                Token::Identifier(name) => stmts.push(Stmt::Assignment(name, self.parse_assignment())),
                 _ => (),
             }
         }
@@ -30,10 +33,81 @@ impl Parser {
         stmts
     }
 
-    fn parse_assignment (&mut self) -> Expr {
-        let _token = self.tokens.get(self.pos);
+    fn parse_return (&mut self) -> Stmt {
+        let expr_to_return = self.parse_expr();
+        Stmt::Return(Box::new(expr_to_return))
+    }
+
+    fn parse_function (&mut self) -> Stmt {
+        let mut args: Vec<String> = Vec::new();
+        
+        let function_name = match self.next_token() {
+            Some(Token::Identifier(name)) => name,
+            _ => panic!("Expected a function name")
+        };
+
+        if self.next_token() != Some(Token::ParenOpen) {
+            panic!("Expected opening paranthesis after function name {}", function_name)
+        }
+
+        while let Some(token) = self.next_token() {
+            match token {
+                Token::ParenClose => break,
+                Token::Identifier(name) => {
+                    args.push(name)
+                }
+                Token::Comma => (),
+                _ => panic!("Unexpected token in function defination")
+            }
+        }
+
+        if self.next_token() != Some(Token::BraceOpen) {
+            panic!("Expected opening braces after function arguments {}", function_name)
+        }
+
+        let mut stmts = Vec::new();
+
+        stmts.append(&mut self.parse_scope());
+
+        Stmt::Function(function_name, args, Box::new(Stmt::CodeBlock(stmts)))
+    }
+
+    fn parse_function_call(&mut self, name: String) -> Expr {
+        let mut args = Vec::new();
+        while let Some(token) = self.next_token() {
+            match token {
+                Token::ParenClose => break,
+                Token::Identifier(name) => {
+                    args.push(Expr::Identifier(name))
+                },
+                Token::StringLiteral(literal) => {
+                    args.push(Expr::StringLiteral(literal))
+                },
+                Token::Float(num) => {
+                    args.push(Expr::Float(num))
+                },
+                Token::Boolean(bool) => {
+                    args.push(Expr::Boolean(bool))
+                },
+                Token::Comma => (),
+                _ => panic!("Unexpected token in function call")
+            }
+        }
+
+        Expr::FunctionCall(name, args)
+    }
+
+    fn parse_assignment (&mut self, name: String) -> Stmt {
         match self.next_token() {
-            Some(Token::Assign) => self.parse_expr(),
+            Some(Token::Assign) => Stmt::Assignment(name, self.parse_expr()),
+            Some(Token::ParenOpen) => {
+                let expr = self.parse_function_call(name);
+
+                match expr {
+                    Expr::FunctionCall(name, args) => Stmt::FunctionCall(name, args),
+                    _ => panic!("Expected function call expression")
+                }
+            },
             _ => panic!("Expected equals after identifier in assignment"),
         }
     }
@@ -63,7 +137,18 @@ impl Parser {
 
             let current_token_expr = match token {
                 Some(Token::Float(num)) => Expr::Float(num),
-                Some(Token::Identifier(name)) => Expr::Identifier(name),
+                Some(Token::Identifier(name)) => {
+                    let token = self.next_token();
+
+                    match token {
+                        Some(Token::ParenOpen) => self.parse_function_call(name),
+                        _ => {
+                            // roll back to previous position
+                            self.pos -= 1;
+                            Expr::Identifier(name)
+                        }
+                    }
+                },
                 Some(Token::StringLiteral(literal)) => Expr::StringLiteral(literal),
                 Some(Token::Boolean(bool)) => Expr::Boolean(bool),
                 Some(Token::Equals) => {

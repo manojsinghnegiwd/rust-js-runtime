@@ -11,7 +11,9 @@ use scope::Scope;
 
 fn main() {
     let code = r#"
-        let x = 6;
+        let x = "Hello";
+        let y = "World";
+        let c = "People";
 
         {
             let y = 8;
@@ -20,13 +22,26 @@ fn main() {
 
             if (x == 1) {
                 let y = 2;
-                log(x + " is hello");
+                log(x + " hello");
                 log(y);
             }
 
-            log(x);
+            log(x + 1);
             log(y);
         }
+
+        function add(a, b) {
+            return a + " " + b + " " + c;
+        }
+
+        function log_something (something) {
+            log(something);
+        }
+
+        let sum = add("Hello", "World");
+        log(sum);
+
+        log_something(x);
 
     "#;
 

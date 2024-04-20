@@ -19,23 +19,40 @@ impl Interpreter {
         }
     }
 
-    pub fn eval(&mut self, stmts: Vec<Stmt>) {
+    pub fn eval(&mut self, stmts: Vec<Stmt>) -> Value {
+        let mut return_value = Value::None;
+
         for stmt in stmts {
             match stmt {
                 Stmt::Let(name, value) => self.eval_let(name, value),
                 Stmt::Log(expr) => self.eval_log(expr),
                 Stmt::Assignment(name, value) => self.eval_assignment(name, value),
-                Stmt::None => (),
                 Stmt::ControlFlow(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
-                Stmt::CodeBlock(stmts) => self.eval_code_block(stmts),
+                Stmt::CodeBlock(stmts) => {
+                    return_value = self.eval_code_block(stmts);
+                },
+                Stmt::Function(function_name, args, function_body) => self.eval_let_function(function_name, args, function_body),
+                Stmt::FunctionCall(name, arguments) => {
+                    return_value = self.eval_function_call(name, arguments);
+                },
+                Stmt::Return(expr) => {
+                    match *expr {
+                        expr => {
+                            return_value = self.eval_expr(expr);
+                        },
+                    }
+                },
+                Stmt::None => (),
             }
-        };
+        }
+
+        return_value
     }
 
-    fn eval_code_block(&mut self, stmts: Vec<Stmt>) {
+    fn eval_code_block(&mut self, stmts: Vec<Stmt>) -> Value {
         let scope = Scope::with_rc(self.scope.clone());
         let mut interpreter = Interpreter::new(Some(scope));
-        interpreter.eval(stmts);
+        interpreter.eval(stmts)
     }
 
     fn eval_let(&mut self, name: String, value: Expr) {
@@ -49,6 +66,48 @@ impl Interpreter {
                 scope.borrow_mut().define(name, value);
             },
             None => (),
+        }
+    }
+
+    fn eval_let_function (&mut self, name: String, args: Vec<String>, value: Box<Stmt>) {
+        match &mut self.scope {
+            Some(scope) => {
+                if scope.borrow().contains_key_local(&name) {
+                    panic!("Variable already defined: {}", name);
+                }
+                
+                scope.borrow_mut().define(name, Value::FunctionDef(args, value));
+            },
+            None => (),
+        }
+    }
+
+    fn eval_function_call (&mut self, name: String, args: Vec<Expr>) -> Value {
+        let value = self.eval_expr(Expr::Identifier(name));
+
+        match value {
+            Value::FunctionDef(params, body) => {
+                let mut stmts = Vec::new();
+
+                let mut i = 0;
+
+                for param in &params {
+                    stmts.push(Stmt::Let(param.to_string(), args.get(i).unwrap().clone() ));
+                    i += 1;
+                };
+
+                match *body {
+                    Stmt::CodeBlock(function_body) => {
+                        for stmt in function_body {
+                            stmts.push(stmt);
+                        }
+                    },
+                    _ => panic!("Expected function body")
+                }
+
+                self.eval_code_block(stmts)
+            },
+            _ => panic!("Expected function body")
         }
     }
 
@@ -83,13 +142,13 @@ impl Interpreter {
             Value::Boolean(false) => {
                 match *else_stmt {
                     Stmt::ControlFlow(condition, stmts, nested_else_stmt) => {
-                        self.eval_if(condition, stmts, nested_else_stmt);
+                        self.eval_if(condition, stmts, nested_else_stmt)
                     },
                     _ => ()
                 }
             },
             _ => panic!("Expected a boolean expression"),
-        };
+        }
     }
 
     fn eval_expr(&mut self, expr: Expr) -> Value {
@@ -118,6 +177,7 @@ impl Interpreter {
                             Value::Float(right) => Some(right),
                             Value::StringLiteral(right) => right.parse::<f64>().ok(),
                             Value::Boolean(right) => Some(right as i32 as f64),
+                            _ => panic!("Expected a number or string"),
                         };
 
                         match corced_right {
@@ -130,6 +190,7 @@ impl Interpreter {
                             Value::Float(right) => Some(right.to_string()),
                             Value::StringLiteral(right) => Some(right),
                             Value::Boolean(right) => Some(right.to_string()),
+                            _ => panic!("Expected a number or string"),
                         };
 
                         Value::Boolean(left == corced_right.unwrap())
@@ -146,10 +207,12 @@ impl Interpreter {
                                 }
                             }
                             Value::Boolean(right) => Some(right),
+                            _ => panic!("Expected a number or string"),
                         };
 
                         Value::Boolean(left == corced_right.unwrap())
-                    }
+                    },
+                    _ => panic!("Expected a number or string"),
                 }
             }
             Expr::TypeCheckEquals(left, right) => {
@@ -173,6 +236,7 @@ impl Interpreter {
                             Value::Float(right) => Some(right),
                             Value::StringLiteral(right) => right.parse::<f64>().ok(),
                             Value::Boolean(right) => Some(right as i32 as f64),
+                            _ => panic!("Expected a number or string"),
                         };
 
                         match corced_right {
@@ -185,6 +249,7 @@ impl Interpreter {
                             Value::Float(right) => Some(right.to_string()),
                             Value::StringLiteral(right) => Some(right),
                             Value::Boolean(right) => Some(right.to_string()),
+                            _ => panic!("Expected a number or string"),
                         };
 
                         Value::Boolean(left != corced_right.unwrap())
@@ -201,10 +266,12 @@ impl Interpreter {
                                 }
                             }
                             Value::Boolean(right) => Some(right),
+                            _ => panic!("Expected a number or string"),
                         };
 
                         Value::Boolean(left != corced_right.unwrap())
                     }
+                    _ => panic!("Expected a number or string"),
                 }
             }
             Expr::TypeNotEquals(left, right) => {
@@ -226,7 +293,8 @@ impl Interpreter {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left + right),
                     (Value::Float(left), Value::StringLiteral(right)) => Value::StringLiteral(format!("{}{}", left, right)),
                     (Value::StringLiteral(left), Value::Float(right)) => Value::StringLiteral(format!("{}{}", left, right)),
-                    _ => panic!("Expected two numbers"),
+                    (Value::StringLiteral(left), Value::StringLiteral(right)) => Value::StringLiteral(format!("{}{}", left, right)),
+                    _ => panic!("Expected a number or string"),
                 }
             },
             Expr::Subtraction(left, right) => {
@@ -255,7 +323,8 @@ impl Interpreter {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left / right),
                     _ => panic!("Expected two numbers"),
                 }
-            }
+            },
+            Expr::FunctionCall(args, value) => self.eval_function_call(args, value),
             _ => panic!("Expected an expression"),
         }
     }

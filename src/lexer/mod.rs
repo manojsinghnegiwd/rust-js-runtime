@@ -131,6 +131,10 @@ impl<'a> Lexer<'a> {
 
                     return token;
                 }
+                ',' => {
+                    self.pos += 1;
+                    return Some(Token::Comma);
+                },
                 _ => {
                     self.pos += 1;
                 }
@@ -140,12 +144,16 @@ impl<'a> Lexer<'a> {
         None
     }
 
+    fn is_valid_variable_char (&mut self, c: char) -> bool {
+        c.is_alphabetic() || c == '_'
+    }
+
     fn read_identifier(&mut self) -> Option<Token> {
         let start = self.pos;
         while self.pos < self.code.len() {
             let c = self.code.chars().nth(self.pos)?;
 
-            if !c.is_alphabetic() {
+            if !self.is_valid_variable_char(c) {
                 break;
             }
 
@@ -157,6 +165,8 @@ impl<'a> Lexer<'a> {
         match ident {
             "let" => Some(Token::Let),
             "log" => Some(Token::Log),
+            "return" => Some(Token::Return),
+            "function" => Some(Token::Function),
             "true" => Some(Token::Boolean(true)),
             "false" => Some(Token::Boolean(false)),
             "if" => Some(Token::If),

@@ -25,9 +25,12 @@ pub enum Token {
     Else,
     Log,
     Let,
+    Comma,
+    Function,
+    Return
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
     Identifier(String),
     Float(f64),
@@ -42,16 +45,20 @@ pub enum Expr {
     NotEquals(Box<Expr>, Box<Expr>),
     TypeNotEquals(Box<Expr>, Box<Expr>),
     ControlFlow(Box<Expr>, Box<Stmt>, Box<Stmt>),
+    FunctionCall(String, Vec<Expr>)
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Stmt {
     Let(String, Expr),
     Assignment(String, Expr),
     ControlFlow(Box<Expr>, Box<Stmt>, Box<Stmt>),
     CodeBlock(Vec<Stmt>),
+    Log(Expr),
+    Function(String, Vec<String>, Box<Stmt>),
+    Return(Box<Expr>),
+    FunctionCall(String, Vec<Expr>),
     None,
-    Log(Expr)
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -59,4 +66,6 @@ pub enum Value {
     Float(f64),
     StringLiteral(String),
     Boolean(bool),
+    FunctionDef(Vec<String>, Box<Stmt>),
+    None
 }

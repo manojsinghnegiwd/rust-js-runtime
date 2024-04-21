@@ -293,6 +293,22 @@ impl Parser {
 
                     return Expr::Equals(Box::new(left), Box::new(right));
                 }
+                Some(Token::LogicalAnd) => {
+                    let left = expr.pop().expect("Expected left side of equals");
+                    let right = self.parse_expr();
+
+                    return Expr::LogicalAnd(Box::new(left), Box::new(right));
+                }
+                Some(Token::LogicalOr) => {
+                    let left = expr.pop().expect("Expected left side of equals");
+                    let right = self.parse_expr();
+
+                    return Expr::LogicalOr(Box::new(left), Box::new(right));
+                }
+                Some(Token::LogicalNot) => {
+                    let right = self.parse_expr();
+                    return Expr::LogicalNot(Box::new(right));
+                }
                 Some(Token::TypeCheckEquals) => {
                     let left = expr.pop().expect("Expected left side of equals");
                     let right = self.parse_expr();

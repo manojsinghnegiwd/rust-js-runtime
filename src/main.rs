@@ -39,12 +39,9 @@ fn main() {
             log(something);
         }
 
-        let sum = add("Hello", "World");
-        
-        log(i+1);
-
-        log_something(i);
-
+        if (0) {
+            log_something("Hello");
+        }
     "#;
 
     let mut lexer = Lexer::new(code);

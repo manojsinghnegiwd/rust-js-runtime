@@ -129,9 +129,18 @@ impl Interpreter {
 
     fn eval_if(&mut self, condition: Box<Expr>, stmts: Box<Stmt>, else_stmt: Box<Stmt>) {
         let result = self.eval_expr(*condition);
+        
+        let result_coerced = match result {
+            Value::Boolean(value) => value,
+            Value::Float(value) => value != 0.0,
+            Value::StringLiteral(value) => value.len() != 0,
+            Value::FunctionDef(_, _) => true,
+            Value::None => false,
+            _ => panic!("Expected a boolean expression"),
+        };
 
-        match result {
-            Value::Boolean(true) => {
+        match result_coerced {
+            true => {
                 match *stmts {
                     Stmt::CodeBlock(code_block_stmts) => {
                         self.eval_code_block(code_block_stmts);
@@ -139,7 +148,7 @@ impl Interpreter {
                     _ => ()
                 }
             },
-            Value::Boolean(false) => {
+            false => {
                 match *else_stmt {
                     Stmt::ControlFlow(condition, stmts, nested_else_stmt) => {
                         self.eval_if(condition, stmts, nested_else_stmt)
@@ -324,8 +333,97 @@ impl Interpreter {
                     _ => panic!("Expected two numbers"),
                 }
             },
+            Expr::LogicalOr(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match left {
+                    Value::Float(left) => {
+                        if left == 0.0 {
+                            return right
+                        } else {
+                            return Value::Float(left)
+                        }
+                    },
+                    Value::StringLiteral(left) => {
+                        if left.len() == 0 {
+                            return right
+                        } else {
+                            return Value::StringLiteral(left)
+                        }
+                    },
+                    Value::Boolean(left) => {
+                        if !left {
+                            return right
+                        } else {
+                            return Value::Boolean(left)
+                        }
+                    }
+                    _ => panic!("Expected a valid logical expression")
+                }
+            },
+            Expr::LogicalAnd(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match left {
+                    Value::Float(left) => {
+                        if left != 0.0 {
+                            return right
+                        } else {
+                            return Value::Float(left)
+                        }
+                    },
+                    Value::StringLiteral(left) => {
+                        if left.len() != 0 {
+                            return right
+                        } else {
+                            return Value::StringLiteral(left)
+                        }
+                    },
+                    Value::Boolean(left) => {
+                        if left {
+                            return right
+                        } else {
+                            return Value::Boolean(left)
+                        }
+                    }
+                    _ => panic!("Expected a valid logical expression")
+                }
+            },
+            Expr::LogicalNot(expr) => {
+                let right = self.eval_expr(*expr);
+
+                match right {
+                    Value::Float(right) => {
+                        if right == 0.0 {
+                            return Value::Boolean(true)
+                        } else {
+                            return Value::Boolean(false)
+                        }
+                    },
+                    Value::StringLiteral(right) => {
+                        if right.len() == 0 {
+                            return Value::Boolean(true)
+                        } else {
+                            return Value::Boolean(false)
+                        }
+                    },
+                    Value::Boolean(right) => {
+                        if !right {
+                            return Value::Boolean(true)
+                        } else {
+                            return Value::Boolean(false)
+                        }
+                    }
+                    _ => panic!("Expected a valid logical expression")
+                }
+            },
             Expr::FunctionCall(args, value) => self.eval_function_call(args, value),
-            _ => panic!("Expected an expression"),
+            _ => {
+                println!("{:?}", expr);
+                panic!("Expected an expression")
+            },
         }
     }
 }

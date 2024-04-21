@@ -1,12 +1,12 @@
 use crate::types::{Expr, Stmt, Token};
 
-pub struct Parser {
-    tokens: Vec<Token>,
+pub struct Parser<'a> {
+    tokens: &'a Vec<Token>,
     pos: usize,
 }
 
-impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
+impl<'a> Parser<'a> {
+    pub fn new(tokens: &'a Vec<Token>) -> Self {
         Parser { tokens, pos: 0 }
     }
 
@@ -56,7 +56,7 @@ impl Parser {
     fn parse_scope (&mut self) -> Vec<Stmt> {
         let scope_tokens = self.get_tokens();
 
-        let mut parser: Parser = Parser::new(scope_tokens);
+        let mut parser: Parser = Parser::new(&scope_tokens);
         let ast = parser.parse();
 
         ast

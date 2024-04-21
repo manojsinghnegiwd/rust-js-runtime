@@ -27,7 +27,10 @@ pub enum Token {
     Let,
     Comma,
     Function,
-    Return
+    Return,
+    LogicalAnd,
+    LogicalOr,
+    LogicalNot
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -45,7 +48,10 @@ pub enum Expr {
     NotEquals(Box<Expr>, Box<Expr>),
     TypeNotEquals(Box<Expr>, Box<Expr>),
     ControlFlow(Box<Expr>, Box<Stmt>, Box<Stmt>),
-    FunctionCall(String, Vec<Expr>)
+    FunctionCall(String, Vec<Expr>),
+    LogicalAnd(Box<Expr>, Box<Expr>),
+    LogicalOr(Box<Expr>, Box<Expr>),
+    LogicalNot(Box<Expr>)
 }
 
 #[derive(Clone, Debug, PartialEq)]

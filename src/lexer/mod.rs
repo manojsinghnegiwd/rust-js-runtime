@@ -39,6 +39,28 @@ impl<'a> Lexer<'a> {
                     let token = self.read_string_literal('\"');
                     return token;
                 },
+                '&' => {
+                    let char = self.code.chars().nth(self.pos + 1)?;
+
+                    match char {
+                        '&' => {
+                            self.pos += 2;
+                            return Some(Token::LogicalAnd)
+                        },
+                        _ => panic!("Expected &")
+                    }
+                },
+                '|' => {
+                    let char = self.code.chars().nth(self.pos + 1)?;
+
+                    match char {
+                        '|' => {
+                            self.pos += 2;
+                            return Some(Token::LogicalOr)
+                        },
+                        _ => panic!("Expected |")
+                    }
+                },
                 '!' => {
                     let char = self.code.chars().nth(self.pos + 1)?;
 
@@ -59,7 +81,7 @@ impl<'a> Lexer<'a> {
                         },
                         _ => {
                             self.pos += 1;
-                            return Some(Token::Not);
+                            return Some(Token::LogicalNot);
                         }
                     }
                 }

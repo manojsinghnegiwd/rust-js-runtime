@@ -13,8 +13,9 @@ This is a JavaScript runtime written in Rust.
 * ~~Implement math calculations~~
 * ~~Implement control flow~~
 * ~~Implement equality~~
-* Implement scope
-* Implement function
+* ~~Implement scope~~
+* ~~Implement function~~
+* ~~Implement Increment/Decrement operators~~
 
 ## Project Structure
 

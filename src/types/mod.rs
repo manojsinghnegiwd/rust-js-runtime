@@ -1,36 +1,53 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
+
+    // literals
     Identifier(String),
     Float(f64),
     StringLiteral(String),
-    Not,
+    Boolean(bool),
+
+    // operators
+    Assign,
+
+    // logical operators
+    LogicalAnd,
+    LogicalOr,
+    LogicalNot,
+
+    // comparison operators
     Equals,
     TypeCheckEquals,
     NotEquals,
     TypeNotEquals,
-    Assign,
+    GreaterThan,
+    LessThan,
+    GreaterThanEquals,
+    LessThanEquals,
+
+    // arithmetic operators
     Addition,
     Subtraction,
     Multiplication,
     Division,
-    Boolean(bool),
+
+    // punctuation
     Semicolon,
     BraceOpen,
     BraceClose,
     ParenOpen,
     ParenClose,
+    Comma,
     Comment(String),
+
+    // keywords
     If,
     ElseIf,
     Else,
     Log,
     Let,
-    Comma,
     Function,
     Return,
-    LogicalAnd,
-    LogicalOr,
-    LogicalNot
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -47,6 +64,10 @@ pub enum Expr {
     TypeCheckEquals(Box<Expr>, Box<Expr>),
     NotEquals(Box<Expr>, Box<Expr>),
     TypeNotEquals(Box<Expr>, Box<Expr>),
+    GreaterThan(Box<Expr>, Box<Expr>),
+    GreaterThanEquals(Box<Expr>, Box<Expr>),
+    LessThan(Box<Expr>, Box<Expr>),
+    LessThanEquals(Box<Expr>, Box<Expr>),
     ControlFlow(Box<Expr>, Box<Stmt>, Box<Stmt>),
     FunctionCall(String, Vec<Expr>),
     LogicalAnd(Box<Expr>, Box<Expr>),

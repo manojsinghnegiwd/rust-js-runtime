@@ -11,8 +11,8 @@ use scope::Scope;
 
 fn main() {
     let code = r#"
-        let x = "Hello";
-        let y = "World";
+        let x = 1;
+        let y = 2;
         let c = "People";
         let i = 0;
 
@@ -39,9 +39,12 @@ fn main() {
             log(something);
         }
 
-        if (0) {
-            log_something("Hello");
-        }
+        log(x < y); => true
+        log(x > y); => false
+        log(x <= y); => true
+        log(x >= y); => false
+
+
     "#;
 
     let mut lexer = Lexer::new(code);

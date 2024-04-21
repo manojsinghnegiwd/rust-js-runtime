@@ -108,7 +108,35 @@ impl<'a> Lexer<'a> {
                             return Some(Token::Assign);
                         }
                     }
-                }
+                },
+                '<' => {
+                    let char = self.code.chars().nth(self.pos + 1)?;
+
+                    match char {
+                        '=' => {
+                            self.pos += 2;
+                            return Some(Token::LessThanEquals)
+                        },
+                        _ => {
+                            self.pos += 1;
+                            return Some(Token::LessThan)
+                        }
+                    }
+                },
+                '>' => {
+                    let char = self.code.chars().nth(self.pos + 1)?;
+
+                    match char {
+                        '=' => {
+                            self.pos += 2;
+                            return Some(Token::GreaterThanEquals)
+                        },
+                        _ => {
+                            self.pos += 1;
+                            return Some(Token::GreaterThan)
+                        }
+                    }
+                },
                 '+' => {
                     self.pos += 1;
                     return Some(Token::Addition);

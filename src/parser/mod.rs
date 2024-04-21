@@ -351,7 +351,31 @@ impl Parser {
                     let right = self.parse_expr();
 
                     return Expr::Division(Box::new(left), Box::new(right))
-                }
+                },
+                Some(Token::GreaterThan) => {
+                    let left = expr.pop().expect("Expected left side of greater than");
+                    let right = self.parse_expr();
+
+                    return Expr::GreaterThan(Box::new(left), Box::new(right))
+                },
+                Some(Token::LessThan) => {
+                    let left = expr.pop().expect("Expected left side of less than");
+                    let right = self.parse_expr();
+
+                    return Expr::LessThan(Box::new(left), Box::new(right))
+                },
+                Some(Token::GreaterThanEquals) => {
+                    let left = expr.pop().expect("Expected left side of greater than equals");
+                    let right = self.parse_expr();
+
+                    return Expr::GreaterThanEquals(Box::new(left), Box::new(right))
+                },
+                Some(Token::LessThanEquals) => {
+                    let left = expr.pop().expect("Expected left side of less than equals");
+                    let right = self.parse_expr();
+
+                    return Expr::LessThanEquals(Box::new(left), Box::new(right))
+                },
                 _ => panic!("Expected Float or identifier"),
             };
 

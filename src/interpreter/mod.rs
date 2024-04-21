@@ -333,6 +333,42 @@ impl Interpreter {
                     _ => panic!("Expected two numbers"),
                 }
             },
+            Expr::GreaterThan(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match (left, right) {
+                    (Value::Float(left), Value::Float(right)) => Value::Boolean(left > right),
+                    _ => panic!("Expected two numbers"),
+                }
+            },
+            Expr::GreaterThanEquals(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match (left, right) {
+                    (Value::Float(left), Value::Float(right)) => Value::Boolean(left >= right),
+                    _ => panic!("Expected two numbers"),
+                }
+            },
+            Expr::LessThan(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match (left, right) {
+                    (Value::Float(left), Value::Float(right)) => Value::Boolean(left < right),
+                    _ => panic!("Expected two numbers"),
+                }
+            },
+            Expr::LessThanEquals(left, right) => {
+                let left = self.eval_expr(*left);
+                let right = self.eval_expr(*right);
+
+                match (left, right) {
+                    (Value::Float(left), Value::Float(right)) => Value::Boolean(left <= right),
+                    _ => panic!("Expected two numbers"),
+                }
+            }
             Expr::LogicalOr(left, right) => {
                 let left = self.eval_expr(*left);
                 let right = self.eval_expr(*right);

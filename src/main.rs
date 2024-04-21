@@ -14,6 +14,7 @@ fn main() {
         let x = "Hello";
         let y = "World";
         let c = "People";
+        let i = 0;
 
         {
             let y = 8;
@@ -39,9 +40,10 @@ fn main() {
         }
 
         let sum = add("Hello", "World");
-        log(sum);
+        
+        log(i+1);
 
-        log_something(x);
+        log_something(i);
 
     "#;
 

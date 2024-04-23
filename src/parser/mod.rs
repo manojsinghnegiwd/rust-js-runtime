@@ -20,6 +20,7 @@ impl<'a> Parser<'a> {
                 Token::Let => stmts.push(self.parse_let()),
                 Token::Log => stmts.push(self.parse_log()),
                 Token::If => stmts.push(self.parse_if()),
+                Token::Loop => stmts.push(self.parse_loop()),
                 Token::Comment(_) => (),
                 Token::BraceOpen => stmts.push(Stmt::CodeBlock(self.parse_scope())),
                 Token::Function => stmts.push(self.parse_function()),
@@ -31,6 +32,7 @@ impl<'a> Parser<'a> {
                 Token::Semicolon => (),
                 Token::Comma => (),
                 Token::BraceClose => (),
+                Token::Break => stmts.push(Stmt::Break),
                 _ => {
                     // roll back the position
                     // because we are not consuming the token
@@ -275,6 +277,15 @@ impl<'a> Parser<'a> {
             }
             _ => panic!("Expected if"),
         }
+    }
+
+    fn parse_loop(&mut self) -> Stmt {
+        let code_block = match self.next_token() {
+            Some(Token::BraceOpen) => self.parse_scope(),
+            _ => panic!("Expected loop body"),
+        };
+
+        Stmt::Loop(Box::new(Stmt::CodeBlock(code_block)))
     }
 
     fn parse_expr(&mut self) -> Expr {

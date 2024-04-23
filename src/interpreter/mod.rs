@@ -27,7 +27,9 @@ impl Interpreter {
                 Stmt::Let(name, value) => self.eval_let(name, value),
                 Stmt::Log(expr) => self.eval_log(expr),
                 Stmt::Assignment(name, value) => self.eval_assignment(name, value),
-                Stmt::ControlFlow(condition, stmts, else_stmt) => self.eval_if(condition, stmts, else_stmt),
+                Stmt::ControlFlow(condition, stmts, else_stmt) => {
+                    return_value = self.eval_if(condition, stmts, else_stmt);
+                },
                 Stmt::CodeBlock(stmts) => {
                     return_value = self.eval_code_block(stmts);
                 },
@@ -35,14 +37,19 @@ impl Interpreter {
                 Stmt::FunctionCall(name, arguments) => {
                     return_value = self.eval_function_call(name, arguments);
                 },
+                Stmt::Break => {
+                    return_value = Value::Break;
+                },
                 Stmt::Return(expr) => {
                     match *expr {
                         expr => {
                             return_value = self.eval_expr(expr);
+                            break;
                         },
                     }
                 },
                 Stmt::ForLoop(_, _, _, _) => (),
+                Stmt::Loop(stmts) => self.eval_loop(stmts),
                 Stmt::Expression(expr) => {
                     return_value = self.eval_expr(*expr);
                 },
@@ -131,7 +138,7 @@ impl Interpreter {
         println!("{:#?}", value);
     }
 
-    fn eval_if(&mut self, condition: Box<Expr>, stmts: Box<Stmt>, else_stmt: Box<Stmt>) {
+    fn eval_if(&mut self, condition: Box<Expr>, stmts: Box<Stmt>, else_stmt: Box<Stmt>) -> Value {
         let result = self.eval_expr(*condition);
         
         let result_coerced = match result {
@@ -147,9 +154,9 @@ impl Interpreter {
             true => {
                 match *stmts {
                     Stmt::CodeBlock(code_block_stmts) => {
-                        self.eval_code_block(code_block_stmts);
+                        self.eval_code_block(code_block_stmts)
                     },
-                    _ => ()
+                    _ => Value::None,
                 }
             },
             false => {
@@ -157,11 +164,29 @@ impl Interpreter {
                     Stmt::ControlFlow(condition, stmts, nested_else_stmt) => {
                         self.eval_if(condition, stmts, nested_else_stmt)
                     },
-                    _ => ()
+                    _ => Value::None,
                 }
             },
             _ => panic!("Expected a boolean expression"),
         }
+    }
+
+    fn eval_loop(&mut self, stmts: Box<Stmt>) {
+        let code_block = match *stmts {
+            Stmt::CodeBlock(code_block_stmts) => code_block_stmts,
+            _ => panic!("Expected a code block"),
+        };
+
+        loop {
+            let scope = Scope::with_rc(self.scope.clone());
+            let mut interpreter = Interpreter::new(Some(scope));
+            let return_value = interpreter.eval(code_block.clone());
+
+            match return_value {
+                Value::Break => break,
+                _ => (),
+            }
+        };
     }
 
     fn eval_expr(&mut self, expr: Expr) -> Value {

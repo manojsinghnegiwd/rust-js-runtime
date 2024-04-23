@@ -117,6 +117,28 @@ mod tests {
         let output = runtime.execute();
     }
 
+    #[test]
+    fn loop_test () {
+        let code: &str = r#"
+            let i = 0;
+
+            loop {
+                i++;
+                log(i);
+                if (i == 10) {
+                    break;
+                }
+            }
+
+            return i;
+        "#;
+
+        let mut runtime = Runtime::new(code);
+        let output = runtime.execute();
+
+        assert_eq!(output, types::Value::Float(10.0));
+    }
+
     // #[test]
     // fn for_loop () {
     //     let code = r#"

@@ -42,6 +42,10 @@ impl Interpreter {
                         },
                     }
                 },
+                Stmt::ForLoop(_, _, _, _) => (),
+                Stmt::Expression(expr) => {
+                    return_value = self.eval_expr(*expr);
+                },
                 Stmt::None => (),
             }
         }
@@ -457,7 +461,6 @@ impl Interpreter {
             },
             Expr::FunctionCall(args, value) => self.eval_function_call(args, value),
             _ => {
-                println!("{:?}", expr);
                 panic!("Expected an expression")
             },
         }

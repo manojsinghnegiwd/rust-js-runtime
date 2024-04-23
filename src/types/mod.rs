@@ -30,6 +30,8 @@ pub enum Token {
     Subtraction,
     Multiplication,
     Division,
+    Increment,
+    Decrement,
 
     // punctuation
     Semicolon,
@@ -48,6 +50,8 @@ pub enum Token {
     Let,
     Function,
     Return,
+    ForLoop,
+    FunctionCall(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -72,7 +76,8 @@ pub enum Expr {
     FunctionCall(String, Vec<Expr>),
     LogicalAnd(Box<Expr>, Box<Expr>),
     LogicalOr(Box<Expr>, Box<Expr>),
-    LogicalNot(Box<Expr>)
+    LogicalNot(Box<Expr>),
+    Assignment(String, Box<Expr>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -85,6 +90,8 @@ pub enum Stmt {
     Function(String, Vec<String>, Box<Stmt>),
     Return(Box<Expr>),
     FunctionCall(String, Vec<Expr>),
+    ForLoop(Box<Stmt>, Box<Stmt>, Box<Stmt>, Box<Stmt>),
+    Expression(Box<Expr>),
     None,
 }
 

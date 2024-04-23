@@ -1,3 +1,5 @@
+use std::ptr::null;
+
 use crate::types::{Expr, Stmt, Token};
 
 pub struct Parser<'a> {
@@ -21,12 +23,29 @@ impl<'a> Parser<'a> {
                 Token::Comment(_) => (),
                 Token::BraceOpen => stmts.push(Stmt::CodeBlock(self.parse_scope())),
                 Token::Function => stmts.push(self.parse_function()),
-                Token::Identifier(name) => stmts.push(self.parse_identifier(name)),
+                Token::ForLoop => stmts.push(self.parse_for_loop()),
                 Token::Return => {
                     stmts.push(self.parse_return());
                     break;
                 },
-                _ => (),
+                Token::Semicolon => (),
+                Token::Comma => (),
+                Token::BraceClose => (),
+                _ => {
+                    // roll back the position
+                    // because we are not consuming the token
+                    self.pos -= 1;
+
+                    let expr = self.parse_expr();
+
+                    stmts.push(
+                        match expr {
+                            Expr::Assignment(name, value) => Stmt::Assignment(name, *value),
+                            Expr::FunctionCall(name, args) => Stmt::FunctionCall(name, args),
+                            _ => Stmt::Expression(Box::new(expr)),
+                        }
+                    );
+                },
             }
         }
 
@@ -41,7 +60,7 @@ impl<'a> Parser<'a> {
                 Token::BraceClose => {
                     scope_tokens.push(token);
                     break;
-                },
+                }
                 Token::BraceOpen => {
                     scope_tokens.push(token);
                     scope_tokens.append(&mut self.get_tokens());
@@ -53,7 +72,7 @@ impl<'a> Parser<'a> {
         scope_tokens
     }
 
-    fn parse_scope (&mut self) -> Vec<Stmt> {
+    fn parse_scope(&mut self) -> Vec<Stmt> {
         let scope_tokens = self.get_tokens();
 
         let mut parser: Parser = Parser::new(&scope_tokens);
@@ -62,43 +81,43 @@ impl<'a> Parser<'a> {
         ast
     }
 
-    fn parse_return (&mut self) -> Stmt {
+    fn parse_return(&mut self) -> Stmt {
         let expr_to_return = self.parse_expr();
         Stmt::Return(Box::new(expr_to_return))
     }
 
-    fn parse_function (&mut self) -> Stmt {
+    fn parse_function(&mut self) -> Stmt {
         let mut args: Vec<String> = Vec::new();
-        
+
         let function_name = match self.next_token() {
             Some(Token::Identifier(name)) => name,
-            _ => panic!("Expected a function name")
+            _ => panic!("Expected a function name"),
         };
 
         if self.next_token() != Some(Token::ParenOpen) {
-            panic!("Expected opening paranthesis after function name {}", function_name)
+            panic!(
+                "Expected opening paranthesis after function name {}",
+                function_name
+            )
         }
 
         while let Some(token) = self.next_token() {
             match token {
                 Token::ParenClose => break,
-                Token::Identifier(name) => {
-                    args.push(name)
-                }
+                Token::Identifier(name) => args.push(name),
                 Token::Comma => (),
-                _ => panic!("Unexpected token in function defination")
+                _ => panic!("Unexpected token in function defination"),
             }
         }
 
         if self.next_token() != Some(Token::BraceOpen) {
-            panic!("Expected opening braces after function arguments {}", function_name)
+            panic!(
+                "Expected opening braces after function arguments {}",
+                function_name
+            )
         }
 
-        let mut stmts = Vec::new();
-
-        stmts.append(&mut self.parse_scope());
-
-        Stmt::Function(function_name, args, Box::new(Stmt::CodeBlock(stmts)))
+        Stmt::Function(function_name, args, Box::new(Stmt::CodeBlock(self.parse_scope())))
     }
 
     fn parse_function_call(&mut self, name: String) -> Expr {
@@ -106,59 +125,61 @@ impl<'a> Parser<'a> {
         while let Some(token) = self.next_token() {
             match token {
                 Token::ParenClose => break,
-                Token::Identifier(name) => {
-                    args.push(Expr::Identifier(name))
-                },
-                Token::StringLiteral(literal) => {
-                    args.push(Expr::StringLiteral(literal))
-                },
-                Token::Float(num) => {
-                    args.push(Expr::Float(num))
-                },
-                Token::Boolean(bool) => {
-                    args.push(Expr::Boolean(bool))
-                },
+                Token::Identifier(name) => args.push(Expr::Identifier(name)),
+                Token::StringLiteral(literal) => args.push(Expr::StringLiteral(literal)),
+                Token::Float(num) => args.push(Expr::Float(num)),
+                Token::Boolean(bool) => args.push(Expr::Boolean(bool)),
                 Token::Comma => (),
-                _ => panic!("Unexpected token in function call")
+                _ => panic!("Unexpected token in function call"),
             }
         }
 
         Expr::FunctionCall(name, args)
     }
 
-    fn parse_identifier (&mut self, name: String) -> Stmt {
+    fn parse_for_loop(&mut self) -> Stmt {
+        let mut i = 0;
+        let mut initiation = Stmt::None;
+        let mut condition = Stmt::None;
+        let mut increment = Stmt::None;
+
         match self.next_token() {
-            Some(Token::Assign) => Stmt::Assignment(name, self.parse_expr()),
             Some(Token::ParenOpen) => {
-                let expr = self.parse_function_call(name);
-
-                println!("{:?}, {:?}", expr, self.pos);
-
-                match expr {
-                    Expr::FunctionCall(name, args) => Stmt::FunctionCall(name, args),
-                    _ => panic!("Expected function call expression")
-                }
-            },
-            Some(Token::Addition) => {
-                match self.next_token() {
-                    Some(Token::Addition) => {
-                        let name_clone = name.clone();
-                        Stmt::Assignment(name, Expr::Addition(Box::new(Expr::Identifier(name_clone)), Box::new(Expr::Float(1.0))))
+                let mut tokens: Vec<Token> = Vec::new();
+                while let Some(token) = self.next_token() {
+                    match token {
+                        Token::ParenClose => break,
+                        _ => tokens.push(token),
                     }
-                    _ => panic!("Expected increment operator")
                 }
-            },
-            Some(Token::Subtraction) => {
-                match self.next_token() {
-                    Some(Token::Subtraction) => {
-                        let name_clone = name.clone();
-                        Stmt::Assignment(name, Expr::Subtraction(Box::new(Expr::Identifier(name_clone)), Box::new(Expr::Float(1.0))))
-                    }
-                    _ => panic!("Expected increment operator")
+
+                let mut parser: Parser = Parser::new(&tokens);
+                let expr_list = parser.parse();
+
+                if expr_list.len() == 3 {
+                    initiation = expr_list[0].clone();
+                    condition = expr_list[1].clone();
+                    increment = expr_list[2].clone();
+                } else {
+                    panic!("Expected 3 expressions in for loop");
                 }
-            },
-            _ => panic!("Expected equals after identifier in assignment"),
-        }
+            }
+            _ => panic!("Expected opening paranthesis after for"),
+        };
+
+
+        let code_block = match self.next_token() {
+
+            Some(Token::BraceOpen) => self.parse_scope(),
+            _ => panic!("Expected for loop body")
+        };
+
+        Stmt::ForLoop(
+            Box::new(initiation),
+            Box::new(condition),
+            Box::new(increment),
+            Box::new(Stmt::CodeBlock(code_block))
+        )
     }
 
     fn parse_let(&mut self) -> Stmt {
@@ -208,10 +229,14 @@ impl<'a> Parser<'a> {
                         match next_token {
                             Some(Token::ElseIf) => {
                                 let else_if_stmt = self.parse_if();
-                                Expr::ControlFlow(Box::new(condition), Box::new(Stmt::CodeBlock(if_ast)), Box::new(else_if_stmt))
+                                Expr::ControlFlow(
+                                    Box::new(condition),
+                                    Box::new(Stmt::CodeBlock(if_ast)),
+                                    Box::new(else_if_stmt),
+                                )
                             }
                             Some(Token::Else) => {
-                                // 
+                                //
                                 self.pos += 1;
 
                                 let else_ast = self.parse_scope();
@@ -221,31 +246,33 @@ impl<'a> Parser<'a> {
                                 Expr::ControlFlow(
                                     Box::new(condition),
                                     Box::new(Stmt::CodeBlock(if_ast)),
-                                    Box::new(
-                                        Stmt::ControlFlow(
-                                            Box::new(
-                                                Expr::Boolean(true)
-                                            ),
-                                            Box::new(Stmt::CodeBlock(else_ast)),
-                                            Box::new(Stmt::None)
-                                        )
-                                    )
+                                    Box::new(Stmt::ControlFlow(
+                                        Box::new(Expr::Boolean(true)),
+                                        Box::new(Stmt::CodeBlock(else_ast)),
+                                        Box::new(Stmt::None),
+                                    )),
                                 )
                             }
                             _ => {
                                 self.pos -= 1;
-                                Expr::ControlFlow(Box::new(condition), Box::new(Stmt::CodeBlock(if_ast)), Box::new(Stmt::None))
-                            },
+                                Expr::ControlFlow(
+                                    Box::new(condition),
+                                    Box::new(Stmt::CodeBlock(if_ast)),
+                                    Box::new(Stmt::None),
+                                )
+                            }
                         }
-                    },
+                    }
                     _ => panic!("Expected opening brace"),
                 }
-            },
+            }
             _ => panic!("Expected opening parenthesis"),
         };
 
         match expr {
-            Expr::ControlFlow(condition, stmts, else_stmt) => Stmt::ControlFlow(condition, stmts, else_stmt),
+            Expr::ControlFlow(condition, stmts, else_stmt) => {
+                Stmt::ControlFlow(condition, stmts, else_stmt)
+            }
             _ => panic!("Expected if"),
         }
     }
@@ -254,7 +281,9 @@ impl<'a> Parser<'a> {
         let mut expr = Vec::new();
 
         loop {
+
             let token = self.next_token();
+
             if token == Some(Token::Semicolon) || token == Some(Token::ParenClose) {
                 break;
             }
@@ -266,25 +295,12 @@ impl<'a> Parser<'a> {
 
                     match token {
                         Some(Token::ParenOpen) => self.parse_function_call(name),
-                        Some(Token::Addition) => {
-                            match self.next_token() {
-                                Some(Token::Addition) => {
-                                    Expr::Addition(Box::new(Expr::Identifier(name)), Box::new(Expr::Float(1.0)))
-                                }
-                                _ => {
-                                    // roll back to previous position
-                                    self.pos -= 2;
-                                    Expr::Identifier(name)
-                                }
-                            }
-                        },
                         _ => {
-                            // roll back to previous position
                             self.pos -= 1;
                             Expr::Identifier(name)
                         }
                     }
-                },
+                }
                 Some(Token::StringLiteral(literal)) => Expr::StringLiteral(literal),
                 Some(Token::Boolean(bool)) => Expr::Boolean(bool),
                 Some(Token::Equals) => {
@@ -292,6 +308,17 @@ impl<'a> Parser<'a> {
                     let right = self.parse_expr();
 
                     return Expr::Equals(Box::new(left), Box::new(right));
+                }
+                Some(Token::Assign) => {
+                    let left = expr.pop().expect("Expected left side of equals");
+                    let right = self.parse_expr();
+
+                    match left {
+                        Expr::Identifier(name) => {
+                            return Expr::Assignment(name, Box::new(right));
+                        }
+                        _ => panic!("Expected identifier on left side of assignment"),
+                    }
                 }
                 Some(Token::LogicalAnd) => {
                     let left = expr.pop().expect("Expected left side of equals");
@@ -331,52 +358,91 @@ impl<'a> Parser<'a> {
                     let left = expr.pop().expect("Expected left side of addition");
                     let right = self.parse_expr();
 
-                    return Expr::Addition(Box::new(left), Box::new(right))
-                },
+                    return Expr::Addition(Box::new(left), Box::new(right));
+                }
+                Some(Token::Increment) => {
+                    let left = expr.pop().expect("Expected left side of addition");
+                    let right = Expr::Float(1.0);
+
+                    match left {
+                        Expr::Identifier(name) => {
+                            let name_clone = name.clone();
+
+                            return Expr::Assignment(
+                                name,
+                                Box::new(Expr::Addition(
+                                    Box::new(Expr::Identifier(name_clone)),
+                                    Box::new(right),
+                                )),
+                            )
+                        }
+                        _ => panic!("Expected identifier on left side of increment"),
+                    }
+                }
+                Some(Token::Decrement) => {
+                    let left = expr.pop().expect("Expected left side of subtraction");
+                    let right = Expr::Float(1.0);
+
+                    match left {
+                        Expr::Identifier(name) => {
+                            let name_clone = name.clone();
+
+                            return Expr::Assignment(
+                                name,
+                                Box::new(Expr::Subtraction(
+                                    Box::new(Expr::Identifier(name_clone)),
+                                    Box::new(right),
+                                )),
+                            )
+                        }
+                        _ => panic!("Expected identifier on left side of decrement"),
+                    }
+                }
                 Some(Token::Subtraction) => {
                     let left = expr.pop().expect("Expected left side of subtraction");
                     let right = self.parse_expr();
 
-                    return Expr::Subtraction(Box::new(left), Box::new(right))
+                    return Expr::Subtraction(Box::new(left), Box::new(right));
                 }
-                ,
                 Some(Token::Multiplication) => {
                     let left = expr.pop().expect("Expected left side of multiplication");
                     let right = self.parse_expr();
 
-                    return Expr::Multiplication(Box::new(left), Box::new(right))
-                },
+                    return Expr::Multiplication(Box::new(left), Box::new(right));
+                }
                 Some(Token::Division) => {
                     let left = expr.pop().expect("Expected left side of division");
                     let right = self.parse_expr();
 
-                    return Expr::Division(Box::new(left), Box::new(right))
-                },
+                    return Expr::Division(Box::new(left), Box::new(right));
+                }
                 Some(Token::GreaterThan) => {
                     let left = expr.pop().expect("Expected left side of greater than");
                     let right = self.parse_expr();
 
-                    return Expr::GreaterThan(Box::new(left), Box::new(right))
-                },
+                    return Expr::GreaterThan(Box::new(left), Box::new(right));
+                }
                 Some(Token::LessThan) => {
                     let left = expr.pop().expect("Expected left side of less than");
                     let right = self.parse_expr();
 
-                    return Expr::LessThan(Box::new(left), Box::new(right))
-                },
+                    return Expr::LessThan(Box::new(left), Box::new(right));
+                }
                 Some(Token::GreaterThanEquals) => {
-                    let left = expr.pop().expect("Expected left side of greater than equals");
+                    let left = expr
+                        .pop()
+                        .expect("Expected left side of greater than equals");
                     let right = self.parse_expr();
 
-                    return Expr::GreaterThanEquals(Box::new(left), Box::new(right))
-                },
+                    return Expr::GreaterThanEquals(Box::new(left), Box::new(right));
+                }
                 Some(Token::LessThanEquals) => {
                     let left = expr.pop().expect("Expected left side of less than equals");
                     let right = self.parse_expr();
 
-                    return Expr::LessThanEquals(Box::new(left), Box::new(right))
-                },
-                _ => panic!("Expected Float or identifier"),
+                    return Expr::LessThanEquals(Box::new(left), Box::new(right));
+                }
+                _ => panic!("Expected Float or identifier")
             };
 
             expr.push(current_token_expr)

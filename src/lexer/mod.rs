@@ -138,12 +138,32 @@ impl<'a> Lexer<'a> {
                     }
                 },
                 '+' => {
-                    self.pos += 1;
-                    return Some(Token::Addition);
+                    let char = self.code.chars().nth(self.pos + 1)?;
+
+                    match char {
+                        '+' => {
+                            self.pos += 2;
+                            return Some(Token::Increment)
+                        },
+                        _ => {
+                            self.pos += 1;
+                            return Some(Token::Addition)
+                        }
+                    }
                 }
                 '-' => {
-                    self.pos += 1;
-                    return Some(Token::Subtraction);
+                    let char = self.code.chars().nth(self.pos + 1)?;
+
+                    match char {
+                        '-' => {
+                            self.pos += 2;
+                            return Some(Token::Decrement)
+                        },
+                        _ => {
+                            self.pos += 1;
+                            return Some(Token::Subtraction)
+                        }
+                    }
                 }
                 '*' => {
                     self.pos += 1;
@@ -220,6 +240,7 @@ impl<'a> Lexer<'a> {
             "true" => Some(Token::Boolean(true)),
             "false" => Some(Token::Boolean(false)),
             "if" => Some(Token::If),
+            "for" => Some(Token::ForLoop),
             "else" => {
                 self.pos += 1;
 

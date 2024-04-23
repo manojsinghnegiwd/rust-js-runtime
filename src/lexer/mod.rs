@@ -241,6 +241,8 @@ impl<'a> Lexer<'a> {
             "false" => Some(Token::Boolean(false)),
             "if" => Some(Token::If),
             "for" => Some(Token::ForLoop),
+            "loop" => Some(Token::Loop),
+            "break" => Some(Token::Break),
             "else" => {
                 self.pos += 1;
 

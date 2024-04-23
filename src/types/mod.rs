@@ -52,6 +52,8 @@ pub enum Token {
     Return,
     ForLoop,
     FunctionCall(String),
+    Loop,
+    Break
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -78,6 +80,7 @@ pub enum Expr {
     LogicalOr(Box<Expr>, Box<Expr>),
     LogicalNot(Box<Expr>),
     Assignment(String, Box<Expr>),
+    Loop(Box<Stmt>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -92,7 +95,9 @@ pub enum Stmt {
     FunctionCall(String, Vec<Expr>),
     ForLoop(Box<Stmt>, Box<Stmt>, Box<Stmt>, Box<Stmt>),
     Expression(Box<Expr>),
+    Loop(Box<Stmt>),
     None,
+    Break
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -101,5 +106,6 @@ pub enum Value {
     StringLiteral(String),
     Boolean(bool),
     FunctionDef(Vec<String>, Box<Stmt>),
+    Break,
     None
 }

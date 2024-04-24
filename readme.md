@@ -2,12 +2,6 @@
 
 This is a JavaScript runtime written in Rust.
 
-# What it can do
-
-* Define variable which can be number or string `let x = 0; let m = 'string'`
-* Log variables `log(x)`
-* Define comments `// This is a comment`
-
 # Roadmap
 * ~~Implement comments~~
 * ~~Implement math calculations~~
@@ -16,6 +10,9 @@ This is a JavaScript runtime written in Rust.
 * ~~Implement scope~~
 * ~~Implement function~~
 * ~~Implement Increment/Decrement operators~~
+* ~~Implement Logical operators~~
+* ~~Implement for/while/loop~~
+
 
 ## Project Structure
 

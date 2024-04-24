@@ -123,11 +123,10 @@ mod tests {
             let i = 0;
 
             loop {
-                i++;
-                log(i);
-                if (i == 10) {
+                if (i >= 10) {
                     break;
                 }
+                i++;
             }
 
             return i;
@@ -139,17 +138,55 @@ mod tests {
         assert_eq!(output, types::Value::Float(10.0));
     }
 
-    // #[test]
-    // fn for_loop () {
-    //     let code = r#"
-    //         for (let i = 0; i < 10; i++) {
-    //             log(i);
-    //         }
-    //     "#;
+    #[test]
+    fn if_test () {
+        let code: &str = r#"
+            let a = 10;
 
-    //     let mut runtime = Runtime::new(code);
-    //     let output = runtime.execute();
+            if (a == 10) {
+                return a;
+            }
+        "#;
 
-    //     assert_eq!(output, types::Value::Float(10.0));
-    // }
+        let mut runtime = Runtime::new(code);
+        let output = runtime.execute();
+
+        assert_eq!(output, types::Value::Float(10.0));
+    }
+
+    #[test]
+    fn while_test () {
+        let code: &str = r#"
+            let i = 0;
+
+            while (i < 10) {
+                i++;
+            }
+
+            return i;
+        "#;
+
+        let mut runtime = Runtime::new(code);
+        let output = runtime.execute();
+
+        assert_eq!(output, types::Value::Float(10.0));
+    }
+
+    #[test]
+    fn for_loop () {
+        let code = r#"
+            let j = 0;
+
+            for (let i = 0; i < 10; i++) {
+                j = i;
+            }
+            
+            return j;
+        "#;
+
+        let mut runtime = Runtime::new(code);
+        let output = runtime.execute();
+
+        assert_eq!(output, types::Value::Float(9.0));
+    }
 }

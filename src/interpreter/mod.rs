@@ -44,16 +44,20 @@ impl Interpreter {
                     match *expr {
                         expr => {
                             return_value = self.eval_expr(expr);
-                            break;
                         },
                     }
                 },
-                Stmt::ForLoop(_, _, _, _) => (),
+                Stmt::ForLoop(init, condition, increment, stmts) => self.eval_for_loop(init, condition, increment, stmts),
                 Stmt::Loop(stmts) => self.eval_loop(stmts),
+                Stmt::While(condition, stmts) => self.eval_while(condition, stmts),
                 Stmt::Expression(expr) => {
                     return_value = self.eval_expr(*expr);
                 },
                 Stmt::None => (),
+            }
+
+            if return_value == Value::Break {
+                break;
             }
         }
 
@@ -156,7 +160,7 @@ impl Interpreter {
                     Stmt::CodeBlock(code_block_stmts) => {
                         self.eval_code_block(code_block_stmts)
                     },
-                    _ => Value::None,
+                    _ => panic!("Expected a code block"),
                 }
             },
             false => {
@@ -187,6 +191,60 @@ impl Interpreter {
                 _ => (),
             }
         };
+    }
+
+    fn eval_while(&mut self, condition: Box<Expr>, stmts: Box<Stmt>) {
+        let mut code_block = match *stmts {
+            Stmt::CodeBlock(code_block_stmts) => code_block_stmts,
+            _ => panic!("Expected a code block"),
+        };
+
+        code_block.insert(0, Stmt::ControlFlow(
+            Box::new(Expr::LogicalNot(Box::new(*condition))),
+            Box::new(
+                Stmt::CodeBlock(
+                    vec![Stmt::Break]
+                )
+            ),
+            Box::new(Stmt::None),
+        ));
+
+        self.eval_code_block(vec![
+            Stmt::Loop(Box::new(
+                Stmt::CodeBlock(code_block)
+            ))
+        ]);
+    }
+
+    fn eval_for_loop(&mut self, init: Box<Stmt>, condition: Box<Stmt>, increment: Box<Stmt>, stmts: Box<Stmt>) {
+        let mut code_block = match *stmts {
+            Stmt::CodeBlock(code_block_stmts) => code_block_stmts,
+            _ => panic!("Expected a code block"),
+        };
+
+        let condition_expr = match *condition {
+            Stmt::Expression(expr) => expr,
+            _ => panic!("Expected an expression"),
+        };
+
+        code_block.insert(0, Stmt::ControlFlow(
+            Box::new(Expr::LogicalNot(Box::new(*condition_expr))),
+            Box::new(
+                Stmt::CodeBlock(
+                    vec![Stmt::Break]
+                )
+            ),
+            Box::new(Stmt::None),
+        ));
+
+        code_block.push(*increment);
+
+        self.eval_code_block(vec![
+            *init,
+            Stmt::Loop(Box::new(
+                Stmt::CodeBlock(code_block)
+            ))
+        ]);
     }
 
     fn eval_expr(&mut self, expr: Expr) -> Value {

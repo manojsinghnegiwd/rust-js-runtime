@@ -21,6 +21,7 @@ impl<'a> Parser<'a> {
                 Token::Log => stmts.push(self.parse_log()),
                 Token::If => stmts.push(self.parse_if()),
                 Token::Loop => stmts.push(self.parse_loop()),
+                Token::While => stmts.push(self.parse_while()),
                 Token::Comment(_) => (),
                 Token::BraceOpen => stmts.push(Stmt::CodeBlock(self.parse_scope())),
                 Token::Function => stmts.push(self.parse_function()),
@@ -286,6 +287,25 @@ impl<'a> Parser<'a> {
         };
 
         Stmt::Loop(Box::new(Stmt::CodeBlock(code_block)))
+    }
+
+    fn parse_while(&mut self) -> Stmt {
+        let condition = match self.next_token() {
+            Some(Token::ParenOpen) => self.parse_expr(),
+            _ => panic!("Expected opening parenthesis"),
+        };
+
+        // skip closing parenthesis
+        self.pos += 1;
+
+        let code_block = match self.next_token() {
+            Some(Token::BraceOpen) => self.parse_scope(),
+            _ => {
+                panic!("Expected while loop body")
+            },
+        };
+
+        Stmt::While(Box::new(condition), Box::new(Stmt::CodeBlock(code_block)))
     }
 
     fn parse_expr(&mut self) -> Expr {

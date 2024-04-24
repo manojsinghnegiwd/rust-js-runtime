@@ -53,7 +53,8 @@ pub enum Token {
     ForLoop,
     FunctionCall(String),
     Loop,
-    Break
+    Break,
+    While
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -96,6 +97,7 @@ pub enum Stmt {
     ForLoop(Box<Stmt>, Box<Stmt>, Box<Stmt>, Box<Stmt>),
     Expression(Box<Expr>),
     Loop(Box<Stmt>),
+    While(Box<Expr>, Box<Stmt>),
     None,
     Break
 }

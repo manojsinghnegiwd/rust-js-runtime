@@ -243,6 +243,7 @@ impl<'a> Lexer<'a> {
             "for" => Some(Token::ForLoop),
             "loop" => Some(Token::Loop),
             "break" => Some(Token::Break),
+            "while" => Some(Token::While),
             "else" => {
                 self.pos += 1;
 

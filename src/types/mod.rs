@@ -108,6 +108,13 @@ pub enum Value {
     StringLiteral(String),
     Boolean(bool),
     FunctionDef(Vec<String>, Box<Stmt>),
+    Return(Box<Value>),
+    Break,
+    None
+}
+
+pub enum Signal {
+    Return,
     Break,
     None
 }

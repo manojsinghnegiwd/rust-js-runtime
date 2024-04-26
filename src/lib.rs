@@ -189,4 +189,24 @@ mod tests {
 
         assert_eq!(output, types::Value::Float(9.0));
     }
+
+    #[test]
+    fn fibnonacci () {
+        let code = r#"
+            function fib (n) {
+                if (n <= 1) {
+                    return n;
+                }
+
+                return fib(n - 1) + fib(n - 2);
+            }
+
+            return fib(10);
+        "#;
+
+        let mut runtime = Runtime::new(code);
+        let output = runtime.execute();
+
+        assert_eq!(output, types::Value::Float(55.0));
+    }
 }

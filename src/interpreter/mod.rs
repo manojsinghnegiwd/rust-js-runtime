@@ -1,5 +1,5 @@
 use crate::scope::Scope;
-use crate::types::{Expr, Stmt, Value};
+use crate::types::{Expr, Stmt, Value, Signal};
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -19,8 +19,9 @@ impl Interpreter {
         }
     }
 
-    pub fn eval(&mut self, stmts: Vec<Stmt>) -> Value {
+    pub fn eval(&mut self, stmts: Vec<Stmt>) -> (Value, Signal) {
         let mut return_value = Value::None;
+        let mut signal_value = Signal::None;
 
         for stmt in stmts {
             match stmt {
@@ -28,22 +29,31 @@ impl Interpreter {
                 Stmt::Log(expr) => self.eval_log(expr),
                 Stmt::Assignment(name, value) => self.eval_assignment(name, value),
                 Stmt::ControlFlow(condition, stmts, else_stmt) => {
-                    return_value = self.eval_if(condition, stmts, else_stmt);
+                    let (value, signal) = self.eval_if(condition, stmts, else_stmt);
+                    return_value = value;
+                    signal_value = signal;
                 },
                 Stmt::CodeBlock(stmts) => {
-                    return_value = self.eval_code_block(stmts);
+                    let (value, signal) = self.eval_code_block(stmts);
+                    return_value = value;
+                    signal_value = signal;
                 },
                 Stmt::Function(function_name, args, function_body) => self.eval_let_function(function_name, args, function_body),
                 Stmt::FunctionCall(name, arguments) => {
-                    return_value = self.eval_function_call(name, arguments);
+                    let (value, signal) = self.eval_function_call(name, arguments);
+                    return_value = value;
+                    signal_value = signal;
                 },
                 Stmt::Break => {
                     return_value = Value::Break;
+                    signal_value = Signal::Break;
                 },
                 Stmt::Return(expr) => {
                     match *expr {
                         expr => {
-                            return_value = self.eval_expr(expr);
+                            let (value, _) = self.eval_expr_with_signal(expr);
+                            return_value = value;
+                            signal_value = Signal::Return;
                         },
                     }
                 },
@@ -51,27 +61,35 @@ impl Interpreter {
                 Stmt::Loop(stmts) => self.eval_loop(stmts),
                 Stmt::While(condition, stmts) => self.eval_while(condition, stmts),
                 Stmt::Expression(expr) => {
-                    return_value = self.eval_expr(*expr);
+                    let (value, signal) = self.eval_expr_with_signal(*expr);
+                    return_value = value;
+                    signal_value = signal;
                 },
                 Stmt::None => (),
             }
 
-            if return_value == Value::Break {
-                break;
+            match signal_value {
+                Signal::Return => {
+                    break;
+                },
+                Signal::Break => {
+                    break;
+                },
+                Signal::None => (),
             }
         }
 
-        return_value
+        (return_value, signal_value)
     }
 
-    fn eval_code_block(&mut self, stmts: Vec<Stmt>) -> Value {
+    fn eval_code_block(&mut self, stmts: Vec<Stmt>) -> (Value, Signal) {
         let scope = Scope::with_rc(self.scope.clone());
         let mut interpreter = Interpreter::new(Some(scope));
         interpreter.eval(stmts)
     }
 
     fn eval_let(&mut self, name: String, value: Expr) {
-        let value = self.eval_expr(value);
+        let (value, _) = self.eval_expr_with_signal(value);
         match &mut self.scope {
             Some(scope) => {
                 if scope.borrow().contains_key_local(&name) {
@@ -97,8 +115,8 @@ impl Interpreter {
         }
     }
 
-    fn eval_function_call (&mut self, name: String, args: Vec<Expr>) -> Value {
-        let value = self.eval_expr(Expr::Identifier(name));
+    fn eval_function_call (&mut self, name: String, args: Vec<Expr>) -> (Value, Signal) {
+        let (value, _) = self.eval_expr_with_signal(Expr::Identifier(name));
 
         match value {
             Value::FunctionDef(params, body) => {
@@ -127,7 +145,7 @@ impl Interpreter {
     }
 
     fn eval_assignment(&mut self, name: String, value: Expr) {
-        let value = self.eval_expr(value);
+        let (value, _) = self.eval_expr_with_signal(value);
 
         match &mut self.scope {
             Some(scope) => {
@@ -138,12 +156,12 @@ impl Interpreter {
     }
 
     fn eval_log(&mut self, expr: Expr) {
-        let value = self.eval_expr(expr);
+        let (value, _) = self.eval_expr_with_signal(expr);
         println!("{:#?}", value);
     }
 
-    fn eval_if(&mut self, condition: Box<Expr>, stmts: Box<Stmt>, else_stmt: Box<Stmt>) -> Value {
-        let result = self.eval_expr(*condition);
+    fn eval_if(&mut self, condition: Box<Expr>, stmts: Box<Stmt>, else_stmt: Box<Stmt>) -> (Value, Signal) {
+        let (result, _) = self.eval_expr_with_signal(*condition);
         
         let result_coerced = match result {
             Value::Boolean(value) => value,
@@ -168,7 +186,7 @@ impl Interpreter {
                     Stmt::ControlFlow(condition, stmts, nested_else_stmt) => {
                         self.eval_if(condition, stmts, nested_else_stmt)
                     },
-                    _ => Value::None,
+                    _ => (Value::None, Signal::None),
                 }
             },
             _ => panic!("Expected a boolean expression"),
@@ -184,10 +202,10 @@ impl Interpreter {
         loop {
             let scope = Scope::with_rc(self.scope.clone());
             let mut interpreter = Interpreter::new(Some(scope));
-            let return_value = interpreter.eval(code_block.clone());
+            let (_, signal) = interpreter.eval(code_block.clone());
 
-            match return_value {
-                Value::Break => break,
+            match signal {
+                Signal::Break => break,
                 _ => (),
             }
         };
@@ -247,6 +265,13 @@ impl Interpreter {
         ]);
     }
 
+    fn eval_expr_with_signal (&mut self, expr: Expr) -> (Value, Signal) {
+        match expr {
+            Expr::FunctionCall(args, value) => self.eval_function_call(args, value),
+            _ => (self.eval_expr(expr), Signal::None),
+        }
+    }
+
     fn eval_expr(&mut self, expr: Expr) -> Value {
         match expr {
             Expr::Identifier(name) => {
@@ -264,8 +289,8 @@ impl Interpreter {
             Expr::StringLiteral(literal) => Value::StringLiteral(literal),
             Expr::Boolean(bool) => Value::Boolean(bool),
             Expr::Equals(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match left {
                     Value::Float(left) => {
@@ -312,8 +337,8 @@ impl Interpreter {
                 }
             }
             Expr::TypeCheckEquals(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Boolean(left == right),
@@ -323,8 +348,8 @@ impl Interpreter {
                 }
             }
             Expr::NotEquals(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match left {
                     Value::Float(left) => {
@@ -371,8 +396,8 @@ impl Interpreter {
                 }
             }
             Expr::TypeNotEquals(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Boolean(left != right),
@@ -382,8 +407,8 @@ impl Interpreter {
                 }
             }
             Expr::Addition(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left + right),
@@ -394,8 +419,8 @@ impl Interpreter {
                 }
             },
             Expr::Subtraction(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left - right),
@@ -403,8 +428,8 @@ impl Interpreter {
                 }
             },
             Expr::Multiplication(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left * right),
@@ -412,8 +437,8 @@ impl Interpreter {
                 }
             },
             Expr::Division(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Float(left / right),
@@ -421,8 +446,8 @@ impl Interpreter {
                 }
             },
             Expr::GreaterThan(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Boolean(left > right),
@@ -430,8 +455,8 @@ impl Interpreter {
                 }
             },
             Expr::GreaterThanEquals(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Boolean(left >= right),
@@ -439,8 +464,8 @@ impl Interpreter {
                 }
             },
             Expr::LessThan(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Boolean(left < right),
@@ -448,8 +473,8 @@ impl Interpreter {
                 }
             },
             Expr::LessThanEquals(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match (left, right) {
                     (Value::Float(left), Value::Float(right)) => Value::Boolean(left <= right),
@@ -457,8 +482,8 @@ impl Interpreter {
                 }
             }
             Expr::LogicalOr(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match left {
                     Value::Float(left) => {
@@ -486,8 +511,8 @@ impl Interpreter {
                 }
             },
             Expr::LogicalAnd(left, right) => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
+                let (left, _) = self.eval_expr_with_signal(*left);
+                let (right, _) = self.eval_expr_with_signal(*right);
 
                 match left {
                     Value::Float(left) => {
@@ -515,7 +540,7 @@ impl Interpreter {
                 }
             },
             Expr::LogicalNot(expr) => {
-                let right = self.eval_expr(*expr);
+                let (right, _) = self.eval_expr_with_signal(*expr);
 
                 match right {
                     Value::Float(right) => {
@@ -542,7 +567,6 @@ impl Interpreter {
                     _ => panic!("Expected a valid logical expression")
                 }
             },
-            Expr::FunctionCall(args, value) => self.eval_function_call(args, value),
             _ => {
                 panic!("Expected an expression")
             },

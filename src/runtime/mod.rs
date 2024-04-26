@@ -61,6 +61,8 @@ impl<'a> Runtime<'a> {
         let scope = Scope::new(None);
 
         let mut interpreter = Interpreter::new(Some(scope));
-        interpreter.eval(local_ast)
+        let (value, _) = interpreter.eval(local_ast);
+
+        return value;
     }
 }

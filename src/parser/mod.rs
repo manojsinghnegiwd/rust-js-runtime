@@ -125,17 +125,45 @@ impl<'a> Parser<'a> {
 
     fn parse_function_call(&mut self, name: String) -> Expr {
         let mut args = Vec::new();
+        let mut arg_expressions = Vec::new();
+
+        arg_expressions.push(Vec::new());
+
         while let Some(token) = self.next_token() {
             match token {
                 Token::ParenClose => break,
-                Token::Identifier(name) => args.push(Expr::Identifier(name)),
-                Token::StringLiteral(literal) => args.push(Expr::StringLiteral(literal)),
-                Token::Float(num) => args.push(Expr::Float(num)),
-                Token::Boolean(bool) => args.push(Expr::Boolean(bool)),
-                Token::Comma => (),
-                _ => panic!("Unexpected token in function call"),
+                Token::Comma => {
+                    let current_arg_tokens = Vec::new();
+                    arg_expressions.push(current_arg_tokens);
+                }
+                _ => arg_expressions.last_mut().unwrap().push(token),
             }
         }
+
+        println!("{:?}", arg_expressions);
+
+        for mut arg_tokens in arg_expressions {
+            arg_tokens.push(Token::Semicolon);
+            let mut parser: Parser = Parser::new(&arg_tokens);
+
+            let mut ast = parser.parse();
+            let expr = ast.pop().expect("Expected expression");
+
+            match expr {
+                Stmt::Expression(expr) => args.push(*expr),
+                _ => panic!("Expected expression"),
+            }
+        }
+
+        // while let Some(token) = self.next_token() {
+        //     match token {
+        //         Token::ParenClose => break,
+        //         Token::Comma => (),
+        //         _ => {
+        //             args.push(self.parse_expr());
+        //         },
+        //     }
+        // }
 
         Expr::FunctionCall(name, args)
     }
@@ -473,7 +501,9 @@ impl<'a> Parser<'a> {
 
                     return Expr::LessThanEquals(Box::new(left), Box::new(right));
                 }
-                _ => panic!("Expected Float or identifier")
+                _ => {
+                    panic!("Expected Float or identifier")
+                }
             };
 
             expr.push(current_token_expr)

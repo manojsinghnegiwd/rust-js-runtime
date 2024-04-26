@@ -9,13 +9,15 @@ use runtime::Runtime;
 
 fn main() {
     let code = r#"
-        let j = 0;
+        function fib (n) {
+            if (n <= 1) {
+                return n;
+            }
 
-        for (let i = 0; i < 10; i++) {
-            j = i;
+            return fib(n - 1);
         }
-        
-        return j;
+
+        log(fib(100))
     "#;
 
     let mut runtime = Runtime::new(code);

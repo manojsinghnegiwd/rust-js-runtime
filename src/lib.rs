@@ -209,4 +209,26 @@ mod tests {
 
         assert_eq!(output, types::Value::Float(55.0));
     }
+
+    #[test]
+
+    fn return_inside_loop () {
+        let code = r#"
+            let i = 0;
+
+            loop {
+                if (i >= 10) {
+                    break;
+                }
+                i++;
+            }
+
+            return i;
+        "#;
+
+        let mut runtime = Runtime::new(code);
+        let output = runtime.execute();
+
+        assert_eq!(output, types::Value::Float(10.0));
+    }
 }

@@ -206,6 +206,7 @@ impl Interpreter {
 
             match signal {
                 Signal::Break => break,
+                Signal::Return => break,
                 _ => (),
             }
         };
